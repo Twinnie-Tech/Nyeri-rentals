@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "skills": {
+    "clerk": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "22a9651398c6bebe577e87ecea133d163f0d64fe7ab13b6542e8fcb47703d2f5"
+    },
+    "clerk-backend-api": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "2f54e000863823297bc3742f86718e08af4051af44fb79c4da3ed89459abd83c"
+    },
+    "clerk-custom-ui": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "80f072f60f08c4d8a5e842e301d6be81065ec5c284d167969424628f49156a81"
+    },
+    "clerk-nextjs-patterns": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "dd47be182d7ca52c2e6b0d4f91cfe8f32409714f677757fc5559b393fb6bad5b"
+    },
+    "clerk-orgs": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "f7f490396af325f8fe3567810ed7531b73d364f07371d96c40fccd07f6f0d943"
+    },
+    "clerk-setup": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "f3cf1cdbaaa45fb526bcdbfb5e8188681942a7fe323faba986cb68952caf08fe"
+    },
+    "clerk-swift": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "57801794a2d8f393751568c384bae46dc48138b4b56e1e1c85b3c6df956f7c46"
+    },
+    "clerk-testing": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "c85c9f9a6067b60b50954317a6a7fa03f052e5cb01032f988fb5e1f62876bcfb"
+    },
+    "clerk-webhooks": {
+      "source": "clerk/skills",
+      "sourceType": "github",
+      "computedHash": "39233b7056673b41322efa9d83d8d7c50c6385f318e1ec2670b0495a67432291"
+    },
+    "content-experimentation-best-practices": {
+      "source": "sanity-io/agent-toolkit",
+      "sourceType": "github",
+      "computedHash": "bf506eeb91e550eb81733d34db0a0e831fbe8f3b6eae4c09e2cd50e45d3e4186"
+    },
+    "content-modeling-best-practices": {
+      "source": "sanity-io/agent-toolkit",
+      "sourceType": "github",
+      "computedHash": "12067ebd7c883e49f4ebe12e5feaf5099c266ba06eefbd19f6e113077c97eff9"
+    },
+    "sanity-best-practices": {
+      "source": "sanity-io/agent-toolkit",
+      "sourceType": "github",
+      "computedHash": "78cccfc9f9417f1b544af8891afdd46c11bf2b61bf3f0129fd3b6de4b5f397a9"
+    },
+    "seo-aeo-best-practices": {
+      "source": "sanity-io/agent-toolkit",
+      "sourceType": "github",
+      "computedHash": "72c2a194b5cbf1185244be75cbb11de620db77b8d0ce62d6b96bea299571c407"
+    },
+    "vercel-composition-patterns": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "10eb4ec94577b79ae98c63ce3e7f35f8a6a06436a4011bff083b397de6960eeb"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "3ff06f0712886f7c2660d6746856c22d3127bd6568ddde29ddad8b72dbaaa226"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "computedHash": "d8e7d3afe37dcc8a97b99ffb5afdb4d0919ae0092ea8b68f44eb201f035e33ac"
+    }
+  }
+}
