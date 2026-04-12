@@ -331,7 +331,7 @@ export default async function HomePage() {
           <div className="bg-gradient-to-r from-secondary/90 to-secondary rounded-3xl p-8 md:p-12 lg:p-16">
             <div className="max-w-3xl">
               <h2 className="text-3xl md:text-4xl font-bold font-heading mb-4 text-secondary-foreground">
-                Are You a Real Estate Agent?
+                Are You a House or Landlord Agent?
               </h2>
               <p className="text-lg text-secondary-foreground/80 mb-8">
                 Join our platform to list properties, connect with motivated

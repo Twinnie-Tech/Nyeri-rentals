@@ -4,7 +4,7 @@ This folder contains seed data and scripts to populate your Sanity database with
 
 ## Contents
 
-- **6 Agents** - Real estate agents with bios, agencies, and profile photos
+- **6 Agents** - House and landlord agent with bios, agencies, and profile photos
 - **25 Properties** - Listings across 10 cities with images, amenities, and locations
 - **8 Users** - Sample users with saved listings
 - **15 Leads** - Buyer inquiries in various statuses
