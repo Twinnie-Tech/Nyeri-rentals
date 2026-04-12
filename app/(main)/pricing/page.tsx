@@ -18,7 +18,7 @@ export default function PricingPage() {
       {/* Hero Section */}
       <header className="max-w-2xl mx-auto text-center mb-8">
         <h1 className="text-4xl font-bold mb-4 text-balance">
-          Become a Real Estate Agent
+          Become a House or Landlord Agent
         </h1>
         <p className="text-lg text-muted-foreground text-pretty">
           Upgrade to list properties, connect with buyers, and grow your
