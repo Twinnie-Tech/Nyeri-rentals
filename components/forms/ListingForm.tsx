@@ -33,20 +33,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { AddressAutocomplete, type AddressResult } from "./AddressAutocomplete";
 import { type ImageItem, ImageUpload } from "./ImageUpload";
 import { LocationPicker } from "./LocationPicker";
-
-const PROPERTY_TYPES = [
-  { value: "house", label: "House" },
-  { value: "apartment", label: "Apartment" },
-  { value: "condo", label: "Condo" },
-  { value: "townhouse", label: "Townhouse" },
-  { value: "land", label: "Land" },
-];
-
-const STATUS_OPTIONS = [
-  { value: "active", label: "Active" },
-  { value: "pending", label: "Pending" },
-  { value: "sold", label: "Sold" },
-];
+import {
+  isLandType,
+  LAND_PURPOSES,
+  LAND_SIZES,
+  LISTING_CATEGORIES,
+  LISTING_STATUSES,
+  PROPERTY_TYPES,
+} from "@/lib/property-categories";
 
 // Re-export Amenity type from shared types
 import type { Amenity } from "@/types";
@@ -56,8 +50,23 @@ const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
   description: z.string().min(20, "Description must be at least 20 characters"),
   price: z.coerce.number().positive("Price must be positive"),
-  propertyType: z.enum(["house", "apartment", "condo", "townhouse", "land"]),
-  status: z.enum(["active", "pending", "sold"]).optional(),
+  listingCategory: z.enum(["rent", "sale", "airbnb"]),
+  propertyType: z.enum([
+    "house",
+    "apartment",
+    "bedsitter",
+    "condo",
+    "townhouse",
+    "villa",
+    "land",
+    "farmland",
+  ]),
+  landSize: z
+    .enum(["quarter_acre", "half_acre", "one_acre", "multi_acre", "custom"])
+    .optional(),
+  landSizeAcres: z.coerce.number().min(0).optional(),
+  landPurpose: z.enum(["residential", "commercial", "agricultural"]).optional(),
+  status: z.enum(["active", "pending", "sold", "rented"]).optional(),
   bedrooms: z.coerce.number().min(0),
   bathrooms: z.coerce.number().min(0),
   squareFeet: z.coerce.number().min(0),
@@ -66,11 +75,9 @@ const formSchema = z.object({
     .min(1800)
     .max(new Date().getFullYear())
     .optional(),
-  // Address fields are still stored but auto-filled from autocomplete
   street: z.string().min(1, "Address is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
-  // Optional because many KE addresses do not have a postcode in geocoding data.
   zipCode: z.string().optional().default(""),
   amenities: z.array(z.string()).optional(),
 });
@@ -98,7 +105,11 @@ interface ListingFormProps {
     title: string;
     description?: string;
     price: number;
+    listingCategory?: string;
     propertyType: string;
+    landSize?: string;
+    landSizeAcres?: number;
+    landPurpose?: string;
     status: string;
     bedrooms: number;
     bathrooms: number;
@@ -158,7 +169,11 @@ export function ListingForm({
     title: "",
     description: "",
     price: 0,
+    listingCategory: "rent",
     propertyType: "house",
+    landSize: undefined,
+    landSizeAcres: undefined,
+    landPurpose: undefined,
     status: "active",
     bedrooms: 0,
     bathrooms: 0,
@@ -177,8 +192,14 @@ export function ListingForm({
       title: listing?.title || "",
       description: listing?.description || "",
       price: listing?.price || 0,
+      listingCategory:
+        (listing?.listingCategory as FormDataOutput["listingCategory"]) ||
+        "rent",
       propertyType:
         (listing?.propertyType as FormDataOutput["propertyType"]) || "house",
+      landSize: listing?.landSize as FormDataOutput["landSize"],
+      landSizeAcres: listing?.landSizeAcres,
+      landPurpose: listing?.landPurpose as FormDataOutput["landPurpose"],
       status: (listing?.status as FormDataOutput["status"]) || "active",
       bedrooms: listing?.bedrooms || 0,
       bathrooms: listing?.bathrooms || 0,
@@ -191,6 +212,10 @@ export function ListingForm({
       amenities: listing?.amenities || [],
     },
   });
+
+  const watchedPropertyType = form.watch("propertyType");
+  const watchedCategory = form.watch("listingCategory");
+  const showLandFields = isLandType(watchedPropertyType);
 
   // Handle address selection from autocomplete
   const handleAddressSelect = (address: AddressResult | null) => {
@@ -240,17 +265,25 @@ export function ListingForm({
           title: data.title,
           description: data.description,
           price: data.price,
+          listingCategory: data.listingCategory,
           propertyType: data.propertyType,
+          landSize: isLandType(data.propertyType) ? data.landSize : undefined,
+          landSizeAcres: isLandType(data.propertyType)
+            ? data.landSizeAcres
+            : undefined,
+          landPurpose: isLandType(data.propertyType)
+            ? data.landPurpose
+            : undefined,
           status: data.status,
-          bedrooms: data.bedrooms,
-          bathrooms: data.bathrooms,
-          squareFeet: data.squareFeet,
-          yearBuilt: data.yearBuilt,
+          bedrooms: isLandType(data.propertyType) ? 0 : data.bedrooms,
+          bathrooms: isLandType(data.propertyType) ? 0 : data.bathrooms,
+          squareFeet: isLandType(data.propertyType) ? 0 : data.squareFeet,
+          yearBuilt: isLandType(data.propertyType) ? undefined : data.yearBuilt,
           address: {
             street: data.street,
             city: data.city,
             state: data.state,
-            zipCode: data.zipCode,
+            zipCode: data.zipCode || "",
           },
           location,
           amenities: data.amenities,
@@ -361,25 +394,33 @@ export function ListingForm({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="price"
+                name="listingCategory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Monthly Rent (Ksh)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="450000"
-                        name={field.name}
-                        onBlur={field.onBlur}
-                        ref={field.ref}
-                        disabled={field.disabled}
-                        value={String(field.value ?? "")}
-                        onChange={(e) => field.onChange(e.target.value)}
-                      />
-                    </FormControl>
+                    <FormLabel>Listing Category</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Rent, sale, or Airbnb" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {LISTING_CATEGORIES.map((category) => (
+                          <SelectItem
+                            key={category.value}
+                            value={category.value}
+                          >
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -414,6 +455,120 @@ export function ListingForm({
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {watchedCategory === "sale"
+                      ? "Sale Price (KES)"
+                      : watchedCategory === "airbnb"
+                        ? "Nightly Rate (KES)"
+                        : "Monthly Rent (KES)"}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="45000"
+                      name={field.name}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                      disabled={field.disabled}
+                      value={String(field.value ?? "")}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {showLandFields && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 rounded-xl border border-border/60 bg-muted/30 p-4">
+                <FormField
+                  control={form.control}
+                  name="landSize"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Land Size</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select size" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {LAND_SIZES.map((size) => (
+                            <SelectItem key={size.value} value={size.value}>
+                              {size.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="landSizeAcres"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Exact acres (optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="e.g. 2.5"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          disabled={field.disabled}
+                          value={String(field.value ?? "")}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="landPurpose"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Land Purpose</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Purpose" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {LAND_PURPOSES.map((purpose) => (
+                            <SelectItem
+                              key={purpose.value}
+                              value={purpose.value}
+                            >
+                              {purpose.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
             {mode === "edit" && (
               <FormField
                 control={form.control}
@@ -431,7 +586,7 @@ export function ListingForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {STATUS_OPTIONS.map((status) => (
+                        {LISTING_STATUSES.map((status) => (
                           <SelectItem key={status.value} value={status.value}>
                             {status.label}
                           </SelectItem>
@@ -460,10 +615,11 @@ export function ListingForm({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Property Details</CardTitle>
-          </CardHeader>
+        {!showLandFields && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Property Details</CardTitle>
+            </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <FormField
@@ -561,6 +717,7 @@ export function ListingForm({
             </div>
           </CardContent>
         </Card>
+        )}
 
         <Card>
           <CardHeader>

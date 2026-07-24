@@ -1,6 +1,7 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+import { apiFetch } from "@/lib/api/client";
+import { getAccessToken, getSessionUser } from "@/lib/api/session";
 import { client } from "@/lib/sanity/client";
 import { sanityFetch } from "@/lib/sanity/live";
 import {
@@ -33,8 +34,20 @@ interface ListingFormDataWithImages {
   title: string;
   description: string;
   price: number;
-  propertyType: "house" | "apartment" | "condo" | "townhouse" | "land";
-  status?: "active" | "pending" | "sold";
+  listingCategory: "rent" | "sale" | "airbnb";
+  propertyType:
+    | "house"
+    | "apartment"
+    | "bedsitter"
+    | "condo"
+    | "townhouse"
+    | "villa"
+    | "land"
+    | "farmland";
+  landSize?: "quarter_acre" | "half_acre" | "one_acre" | "multi_acre" | "custom";
+  landSizeAcres?: number;
+  landPurpose?: "residential" | "commercial" | "agricultural";
+  status?: "active" | "pending" | "sold" | "rented";
   bedrooms: number;
   bathrooms: number;
   squareFeet: number;
@@ -62,15 +75,16 @@ export async function createListing(
   data: ListingFormDataWithImages,
 ): Promise<CreateListingResult> {
   try {
-    const { userId } = await auth();
+    const user = await getSessionUser();
+    const accessToken = await getAccessToken();
 
-    if (!userId) {
+    if (!user || !accessToken) {
       return { success: false, error: "Not authenticated" };
     }
 
     const { data: agent } = await sanityFetch({
       query: AGENT_ID_BY_USER_QUERY,
-      params: { userId },
+      params: { userId: user.id },
     });
 
     if (!agent?._id) {
@@ -87,7 +101,11 @@ export async function createListing(
       slug: { _type: "slug", current: slugify(data.title) },
       description: data.description,
       price: data.price,
+      listingCategory: data.listingCategory,
       propertyType: data.propertyType,
+      landSize: data.landSize,
+      landSizeAcres: data.landSizeAcres,
+      landPurpose: data.landPurpose,
       status: "active",
       bedrooms: data.bedrooms,
       bathrooms: data.bathrooms,
@@ -105,6 +123,26 @@ export async function createListing(
       updatedAt: new Date().toISOString(),
     });
 
+    await apiFetch("/properties/mirror", {
+      method: "POST",
+      accessToken,
+      body: {
+        sanityId: createdProperty._id,
+        title: data.title,
+        slug: slugify(data.title),
+        listingCategory: data.listingCategory,
+        propertyType: data.propertyType,
+        status: "active",
+        price: data.price,
+        bedrooms: data.bedrooms,
+        bathrooms: data.bathrooms,
+        city: data.address.city,
+        county: data.address.state,
+        latitude: data.location?.lat,
+        longitude: data.location?.lng,
+      },
+    }).catch(() => null);
+
     return { success: true, id: createdProperty._id };
   } catch (error) {
     const message =
@@ -117,22 +155,18 @@ export async function updateListing(
   listingId: string,
   data: ListingFormDataWithImages,
 ) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Not authenticated");
-  }
+  const user = await getSessionUser();
+  if (!user) throw new Error("Not authenticated");
 
   const { data: agent } = await sanityFetch({
     query: AGENT_ID_BY_USER_QUERY,
-    params: { userId },
+    params: { userId: user.id },
   });
 
   if (!agent) {
     throw new Error("Agent not found");
   }
 
-  // Verify ownership
   const { data: listing } = await sanityFetch({
     query: PROPERTY_AGENT_REF_QUERY,
     params: { id: listingId },
@@ -149,7 +183,11 @@ export async function updateListing(
       slug: { _type: "slug", current: slugify(data.title) },
       description: data.description,
       price: data.price,
+      listingCategory: data.listingCategory,
       propertyType: data.propertyType,
+      landSize: data.landSize,
+      landSizeAcres: data.landSizeAcres,
+      landPurpose: data.landPurpose,
       status: data.status || "active",
       bedrooms: data.bedrooms,
       bathrooms: data.bathrooms,
@@ -168,24 +206,20 @@ export async function updateListing(
 
 export async function updateListingStatus(
   listingId: string,
-  status: "active" | "pending" | "sold",
+  status: "active" | "pending" | "sold" | "rented",
 ) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Not authenticated");
-  }
+  const user = await getSessionUser();
+  if (!user) throw new Error("Not authenticated");
 
   const { data: agent } = await sanityFetch({
     query: AGENT_ID_BY_USER_QUERY,
-    params: { userId },
+    params: { userId: user.id },
   });
 
   if (!agent) {
     throw new Error("Agent not found");
   }
 
-  // Verify ownership
   const { data: listing } = await sanityFetch({
     query: PROPERTY_AGENT_REF_QUERY,
     params: { id: listingId },
@@ -205,22 +239,18 @@ export async function updateListingStatus(
 }
 
 export async function deleteListing(listingId: string) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Not authenticated");
-  }
+  const user = await getSessionUser();
+  if (!user) throw new Error("Not authenticated");
 
   const { data: agent } = await sanityFetch({
     query: AGENT_ID_BY_USER_QUERY,
-    params: { userId },
+    params: { userId: user.id },
   });
 
   if (!agent) {
     throw new Error("Agent not found");
   }
 
-  // Verify ownership
   const { data: listing } = await sanityFetch({
     query: PROPERTY_AGENT_REF_QUERY,
     params: { id: listingId },

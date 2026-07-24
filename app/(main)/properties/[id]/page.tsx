@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getSessionUser } from "@/lib/api/session";
 import {
   Bath,
   Bed,
@@ -58,7 +58,8 @@ export default async function PropertyPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { userId } = await auth();
+  const session = await getSessionUser();
+  const userId = session?.id;
 
   const { data: property } = await sanityFetch({
     query: PROPERTY_DETAIL_QUERY,

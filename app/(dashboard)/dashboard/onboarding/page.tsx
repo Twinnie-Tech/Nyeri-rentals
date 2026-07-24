@@ -1,4 +1,4 @@
-import { auth } from "@clerk/nextjs/server";
+import { getSessionUser } from "@/lib/api/session";
 import { redirect } from "next/navigation";
 import { createAgentDocument } from "@/actions/agents";
 import { AgentOnboardingForm } from "@/components/forms/AgentOnboardingForm";
@@ -7,7 +7,9 @@ import { AGENT_ONBOARDING_CHECK_QUERY } from "@/lib/sanity/queries";
 
 export default async function AgentOnboardingPage() {
   // Middleware guarantees: user is authenticated + has agent plan
-  const { userId } = await auth();
+  const session = await getSessionUser();
+  if (!session) redirect("/sign-in");
+  const userId = session.id;
 
   // Fetch agent (may not exist yet for new subscribers)
   const { data: agent } = await sanityFetch({

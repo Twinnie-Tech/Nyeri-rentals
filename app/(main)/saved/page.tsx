@@ -1,24 +1,38 @@
-import { auth } from "@clerk/nextjs/server";
 import { Heart } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { PropertyGrid } from "@/components/property/PropertyGrid";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { apiFetch } from "@/lib/api/client";
+import { getAccessToken, getSessionUser } from "@/lib/api/session";
 import { sanityFetch } from "@/lib/sanity/live";
-import { USER_SAVED_LISTINGS_QUERY } from "@/lib/sanity/queries";
+import { PROPERTIES_BY_IDS_QUERY } from "@/lib/sanity/queries";
 
 export default async function SavedListingsPage() {
-  const { userId } = await auth();
+  const session = await getSessionUser();
+  if (!session) redirect("/sign-in");
 
-  if (!userId) {
-    redirect("/sign-in");
+  const accessToken = await getAccessToken();
+  let savedProperties: unknown[] = [];
+
+  if (accessToken) {
+    try {
+      const saved = await apiFetch<
+        Array<{ property: { sanityId: string } }>
+      >("/users/me/saved", { accessToken });
+      const ids = saved.map((s) => s.property.sanityId).filter(Boolean);
+      if (ids.length) {
+        const { data } = await sanityFetch({
+          query: PROPERTIES_BY_IDS_QUERY,
+          params: { ids },
+        });
+        savedProperties = data || [];
+      }
+    } catch {
+      savedProperties = [];
+    }
   }
-
-  const { data: savedProperties } = await sanityFetch({
-    query: USER_SAVED_LISTINGS_QUERY,
-    params: { clerkId: userId },
-  });
 
   return (
     <div className="container py-16">
@@ -28,7 +42,10 @@ export default async function SavedListingsPage() {
       </div>
 
       {savedProperties && savedProperties.length > 0 ? (
-        <PropertyGrid properties={savedProperties} showRemoveButton />
+        <PropertyGrid
+          properties={savedProperties as never}
+          showRemoveButton
+        />
       ) : (
         <EmptyState
           icon={Heart}
@@ -39,7 +56,6 @@ export default async function SavedListingsPage() {
               <Link href="/properties">Browse Properties</Link>
             </Button>
           }
-          className="bg-muted"
         />
       )}
     </div>

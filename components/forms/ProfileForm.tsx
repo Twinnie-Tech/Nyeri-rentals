@@ -20,7 +20,11 @@ import type { User } from "@/types";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  phone: z.string().optional(),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  phone: z.string().min(1, "Phone number is required"),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -36,6 +40,7 @@ export function ProfileForm({ user }: ProfileFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: user.name,
+      email: user.email || "",
       phone: user.phone || "",
     },
   });
@@ -45,11 +50,21 @@ export function ProfileForm({ user }: ProfileFormProps) {
       try {
         await updateUserProfile({
           name: data.name,
-          phone: data.phone || "",
+          email: data.email,
+          phone: data.phone,
         });
         toast.success("Profile updated successfully");
-      } catch (_error) {
-        toast.error("Failed to update profile");
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to update profile";
+        toast.error(message);
+        const lower = message.toLowerCase();
+        if (lower.includes("phone")) {
+          form.setError("phone", { message });
+        }
+        if (lower.includes("email")) {
+          form.setError("email", { message });
+        }
       }
     });
   };
@@ -71,20 +86,24 @@ export function ProfileForm({ user }: ProfileFormProps) {
           )}
         />
 
-        <div className="space-y-2">
-          <label htmlFor="profile-email" className="text-sm font-medium">
-            Email
-          </label>
-          <Input
-            id="profile-email"
-            value={user.email}
-            disabled
-            className="bg-muted"
-          />
-          <p className="text-xs text-muted-foreground">
-            Email is managed by your account settings
-          </p>
-        </div>
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
@@ -93,7 +112,12 @@ export function ProfileForm({ user }: ProfileFormProps) {
             <FormItem>
               <FormLabel>Phone Number</FormLabel>
               <FormControl>
-                <Input type="tel" placeholder="(555) 123-4567" {...field} />
+                <Input
+                  type="tel"
+                  autoComplete="tel"
+                  placeholder="07XX XXX XXX or +254…"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

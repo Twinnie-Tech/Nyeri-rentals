@@ -20,18 +20,31 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { Amenity } from "@/types";
+import {
+  LAND_PURPOSES,
+  LAND_SIZES,
+  LISTING_CATEGORIES,
+  PROPERTY_TYPES,
+} from "@/lib/property-categories";
 
-const PROPERTY_TYPES = [
+const PROPERTY_TYPE_OPTIONS = [
   { value: "all", label: "All Types" },
-  { value: "house", label: "House" },
-  { value: "apartment", label: "Apartment" },
-  { value: "condo", label: "Condo" },
-  { value: "townhouse", label: "Townhouse" },
-  { value: "land", label: "Land" },
-  { value: "singleroom", label: "singleroom" },
-  { value: "bedsitters", label: "Bedsitters" },
-  { value: "onebedroom", label: "Onebedroom" },
-  { value: "twobedroom", label: "twobedroom" },
+  ...PROPERTY_TYPES,
+];
+
+const CATEGORY_OPTIONS = [
+  { value: "all", label: "All Categories" },
+  ...LISTING_CATEGORIES,
+];
+
+const LAND_PURPOSE_OPTIONS = [
+  { value: "all", label: "Any purpose" },
+  ...LAND_PURPOSES,
+];
+
+const LAND_SIZE_OPTIONS = [
+  { value: "all", label: "Any size" },
+  ...LAND_SIZES,
 ];
 
 const BEDROOM_OPTIONS = [
@@ -90,6 +103,9 @@ export function FilterSidebar({ amenities }: FilterSidebarProps) {
     beds: searchParams.get("beds") || "0",
     baths: searchParams.get("baths") || "0",
     type: searchParams.get("type") || "all",
+    category: searchParams.get("category") || "all",
+    landPurpose: searchParams.get("landPurpose") || "all",
+    landSize: searchParams.get("landSize") || "all",
     city: searchParams.get("city") || "",
     // Advanced filters
     minSqft: searchParams.get("minSqft") || "",
@@ -131,6 +147,12 @@ export function FilterSidebar({ amenities }: FilterSidebarProps) {
       params.set("baths", filters.baths);
     if (filters.type && filters.type !== "all")
       params.set("type", filters.type);
+    if (filters.category && filters.category !== "all")
+      params.set("category", filters.category);
+    if (filters.landPurpose && filters.landPurpose !== "all")
+      params.set("landPurpose", filters.landPurpose);
+    if (filters.landSize && filters.landSize !== "all")
+      params.set("landSize", filters.landSize);
     if (filters.city) params.set("city", filters.city);
 
     // Advanced filters
@@ -157,6 +179,9 @@ export function FilterSidebar({ amenities }: FilterSidebarProps) {
       beds: "0",
       baths: "0",
       type: "all",
+      category: "all",
+      landPurpose: "all",
+      landSize: "all",
       city: "",
       minSqft: "",
       maxSqft: "",
@@ -178,6 +203,9 @@ export function FilterSidebar({ amenities }: FilterSidebarProps) {
     (filters.beds && filters.beds !== "0") ||
     (filters.baths && filters.baths !== "0") ||
     (filters.type && filters.type !== "all") ||
+    (filters.category && filters.category !== "all") ||
+    (filters.landPurpose && filters.landPurpose !== "all") ||
+    (filters.landSize && filters.landSize !== "all") ||
     filters.city ||
     filters.minSqft ||
     filters.maxSqft ||
@@ -235,6 +263,28 @@ export function FilterSidebar({ amenities }: FilterSidebarProps) {
           />
         </div>
 
+        {/* Listing Category */}
+        <div className="space-y-2">
+          <Label htmlFor="category" className="text-sm font-medium">
+            Listing Category
+          </Label>
+          <Select
+            value={filters.category}
+            onValueChange={(value) => handleFilterChange("category", value)}
+          >
+            <SelectTrigger id="category" className="w-full">
+              <SelectValue placeholder="All Categories" />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORY_OPTIONS.map((category) => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Property Type */}
         <div className="space-y-2">
           <Label htmlFor="type" className="text-sm font-medium">
@@ -248,7 +298,7 @@ export function FilterSidebar({ amenities }: FilterSidebarProps) {
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
-              {PROPERTY_TYPES.map((type) => (
+              {PROPERTY_TYPE_OPTIONS.map((type) => (
                 <SelectItem key={type.value} value={type.value}>
                   {type.label}
                 </SelectItem>
@@ -256,6 +306,56 @@ export function FilterSidebar({ amenities }: FilterSidebarProps) {
             </SelectContent>
           </Select>
         </div>
+
+        {(filters.type === "land" ||
+          filters.type === "farmland" ||
+          filters.landPurpose !== "all" ||
+          filters.landSize !== "all") && (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="landPurpose" className="text-sm font-medium">
+                Land Purpose
+              </Label>
+              <Select
+                value={filters.landPurpose}
+                onValueChange={(value) =>
+                  handleFilterChange("landPurpose", value)
+                }
+              >
+                <SelectTrigger id="landPurpose" className="w-full">
+                  <SelectValue placeholder="Any purpose" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LAND_PURPOSE_OPTIONS.map((purpose) => (
+                    <SelectItem key={purpose.value} value={purpose.value}>
+                      {purpose.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="landSize" className="text-sm font-medium">
+                Land Size
+              </Label>
+              <Select
+                value={filters.landSize}
+                onValueChange={(value) => handleFilterChange("landSize", value)}
+              >
+                <SelectTrigger id="landSize" className="w-full">
+                  <SelectValue placeholder="Any size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LAND_SIZE_OPTIONS.map((size) => (
+                    <SelectItem key={size.value} value={size.value}>
+                      {size.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </>
+        )}
 
         {/* Price Range */}
         <div className="space-y-2">

@@ -5,6 +5,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  getLandPurposeLabel,
+  getLandSizeLabel,
+  getListingCategoryLabel,
+  getPriceSuffix,
+  getPropertyTypeLabel,
+  isLandType,
+} from "@/lib/property-categories";
 import { urlFor } from "@/lib/sanity/image";
 import type { Property } from "@/types";
 
@@ -22,9 +30,9 @@ export function PropertyCard({
   showRemoveButton: _showRemoveButton,
 }: PropertyCardProps) {
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-KE", {
       style: "currency",
-      currency: "KSH",
+      currency: "KES",
       maximumFractionDigits: 0,
     }).format(price);
   };
@@ -42,64 +50,73 @@ export function PropertyCard({
       ? property.status.charAt(0).toUpperCase() + property.status.slice(1)
       : null;
 
+  const priceSuffix = getPriceSuffix(property.listingCategory);
+  const categoryLabel = getListingCategoryLabel(property.listingCategory);
+  const typeLabel = getPropertyTypeLabel(property.propertyType);
+
   return (
     <Link href={`/properties/${property._id}`} className="group block">
-      <article className="bg-card text-card-foreground overflow-hidden rounded-2xl border border-border/50 shadow-warm transition-[transform,box-shadow] duration-300 hover:shadow-warm-lg hover:-translate-y-1">
-        {/* Image Container */}
-        <div className="relative aspect-[4/3] overflow-hidden">
+      <article className="overflow-hidden rounded-2xl bg-card transition-transform duration-300 hover:-translate-y-1">
+        <div className="relative aspect-[5/4] overflow-hidden rounded-2xl">
           {property.image?.asset ? (
             <Image
-              src={urlFor(property.image).width(600).height(450).url()}
+              src={urlFor(property.image).width(700).height(560).url()}
               alt={property.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground">No image available</span>
+              <span className="text-muted-foreground text-sm">No photo yet</span>
             </div>
           )}
 
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-foreground/50 via-transparent to-transparent opacity-70"
+            aria-hidden="true"
+          />
 
-          {/* Status Badge */}
-          {statusLabel && (
-            <Badge
-              variant={property.status === "sold" ? "destructive" : "muted"}
-              className="absolute top-3 left-3 shadow-sm"
-            >
-              {statusLabel}
-            </Badge>
+          <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+            {property.listingCategory && (
+              <Badge className="bg-secondary text-secondary-foreground shadow-sm">
+                {categoryLabel}
+              </Badge>
+            )}
+            {statusLabel && (
+              <Badge
+                variant={
+                  property.status === "sold" || property.status === "rented"
+                    ? "destructive"
+                    : "muted"
+                }
+              >
+                {statusLabel}
+              </Badge>
+            )}
+          </div>
+
+          {typeLabel && (
+            <span className="absolute bottom-3 left-3 rounded-full bg-background/90 px-3 py-1 text-xs font-medium capitalize backdrop-blur-sm">
+              {typeLabel}
+            </span>
           )}
 
-          {/* Property Type Badge */}
-          {property.propertyType && (
-            <Badge
-              variant="secondary"
-              className="absolute bottom-3 left-3 capitalize shadow-sm bg-background/90 backdrop-blur-sm"
-            >
-              {property.propertyType}
-            </Badge>
-          )}
-
-          {/* Save Button */}
           {onSave && (
             <Button
               variant="ghost"
               size="icon"
-              className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm hover:bg-background shadow-sm"
+              className="absolute top-3 right-3 h-9 w-9 rounded-full bg-background/90 backdrop-blur-sm hover:bg-background"
               onClick={handleSaveClick}
               aria-label={
                 isSaved ? "Remove from saved properties" : "Save property"
               }
             >
               <Heart
-                className={`h-5 w-5 transition-colors duration-200 ${
+                className={`h-4 w-4 transition-colors duration-200 ${
                   isSaved
                     ? "fill-primary text-primary"
-                    : "text-muted-foreground group-hover:text-foreground"
+                    : "text-muted-foreground"
                 }`}
                 aria-hidden="true"
               />
@@ -107,53 +124,62 @@ export function PropertyCard({
           )}
         </div>
 
-        {/* Content */}
-        <div className="p-5">
-          {/* Price */}
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <h3 className="font-bold font-heading text-xl tabular-nums">
-              {formatPrice(property.price)}
-            </h3>
-          </div>
-
-          {/* Title */}
-          <p className="text-sm text-muted-foreground line-clamp-1 mb-4 min-w-0">
-            {property.title}
+        <div className="pt-4 px-1">
+          <p className="font-heading text-xl font-semibold tabular-nums tracking-tight">
+            {formatPrice(property.price)}
+            {priceSuffix ? (
+              <span className="text-sm font-body font-normal text-muted-foreground">
+                {" "}
+                {priceSuffix}
+              </span>
+            ) : null}
           </p>
 
-          {/* Property Stats */}
-          <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-            {property.bedrooms !== undefined && (
-              <div className="flex items-center gap-1.5">
-                <Bed className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-                <span className="tabular-nums">{property.bedrooms}</span>
-                <span className="sr-only sm:not-sr-only">&nbsp;beds</span>
-              </div>
-            )}
-            {property.bathrooms !== undefined && (
-              <div className="flex items-center gap-1.5">
-                <Bath className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-                <span className="tabular-nums">{property.bathrooms}</span>
-                <span className="sr-only sm:not-sr-only">&nbsp;baths</span>
-              </div>
-            )}
-            {property.squareFeet && (
-              <div className="flex items-center gap-1.5">
-                <Square className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
-                <span className="tabular-nums">
-                  {property.squareFeet.toLocaleString()}
-                </span>
-                <span className="sr-only sm:not-sr-only">&nbsp;sqft</span>
-              </div>
-            )}
-          </div>
+          <h3 className="text-sm font-medium line-clamp-1 mb-3 min-w-0 mt-1">
+            {property.title}
+          </h3>
 
-          {/* Location */}
+          {isLandType(property.propertyType) ? (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
+              {property.landSize && (
+                <span>{getLandSizeLabel(property.landSize)}</span>
+              )}
+              {property.landPurpose && (
+                <span>· {getLandPurposeLabel(property.landPurpose)}</span>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+              {property.bedrooms !== undefined && (
+                <span className="inline-flex items-center gap-1">
+                  <Bed className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="tabular-nums">{property.bedrooms}</span>
+                </span>
+              )}
+              {property.bathrooms !== undefined && (
+                <span className="inline-flex items-center gap-1">
+                  <Bath className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="tabular-nums">{property.bathrooms}</span>
+                </span>
+              )}
+              {property.squareFeet ? (
+                <span className="inline-flex items-center gap-1">
+                  <Square className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="tabular-nums">
+                    {property.squareFeet.toLocaleString()}
+                  </span>
+                </span>
+              ) : null}
+            </div>
+          )}
+
           {property.address && (
-            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span className="line-clamp-1 min-w-0">
-                {property.address.city}, {property.address.state}
+                {[property.address.city, property.address.state]
+                  .filter(Boolean)
+                  .join(", ")}
               </span>
             </div>
           )}

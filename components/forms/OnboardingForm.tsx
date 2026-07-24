@@ -21,24 +21,34 @@ import { LoadingButton } from "@/components/ui/loading-button";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  phone: z.string().optional(),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .email("Enter a valid email address"),
+  phone: z.string().min(1, "Phone number is required"),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
 interface OnboardingFormProps {
   defaultName: string;
-  email: string;
+  defaultEmail: string;
+  defaultPhone: string;
 }
 
-export function OnboardingForm({ defaultName, email }: OnboardingFormProps) {
+export function OnboardingForm({
+  defaultName,
+  defaultEmail,
+  defaultPhone,
+}: OnboardingFormProps) {
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: defaultName,
-      phone: "",
+      email: defaultEmail,
+      phone: defaultPhone,
     },
   });
 
@@ -47,15 +57,25 @@ export function OnboardingForm({ defaultName, email }: OnboardingFormProps) {
       try {
         await completeUserOnboarding({
           name: data.name,
-          phone: data.phone || "",
-          email,
+          phone: data.phone,
+          email: data.email,
         });
       } catch (error) {
-        // Redirect throws internally - rethrow to let Next.js handle it
         if (isRedirectError(error)) {
           throw error;
         }
-        toast.error("Failed to complete onboarding. Please try again.");
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to complete onboarding. Please try again.";
+        toast.error(message);
+        const lower = message.toLowerCase();
+        if (lower.includes("phone")) {
+          form.setError("phone", { message });
+        }
+        if (lower.includes("email")) {
+          form.setError("email", { message });
+        }
       }
     });
   };
@@ -79,29 +99,38 @@ export function OnboardingForm({ defaultName, email }: OnboardingFormProps) {
               )}
             />
 
-            <div className="space-y-2">
-              <label htmlFor="onboarding-email" className="text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="onboarding-email"
-                value={email}
-                disabled
-                className="bg-muted"
-              />
-              <p className="text-xs text-muted-foreground">
-                Email is managed by your account settings
-              </p>
-            </div>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      autoComplete="email"
+                      placeholder="you@example.com"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number (Optional)</FormLabel>
+                  <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input type="tel" placeholder="(555) 123-4567" {...field} />
+                    <Input
+                      type="tel"
+                      autoComplete="tel"
+                      placeholder="07XX XXX XXX or +254…"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

@@ -41,8 +41,20 @@ export interface Property {
   slug: string;
   description?: string;
   price: number;
-  propertyType: "house" | "apartment" | "condo" | "townhouse" | "land";
-  status: "active" | "pending" | "sold";
+  listingCategory?: "rent" | "sale" | "airbnb";
+  propertyType:
+    | "house"
+    | "apartment"
+    | "bedsitter"
+    | "condo"
+    | "townhouse"
+    | "villa"
+    | "land"
+    | "farmland";
+  landSize?: "quarter_acre" | "half_acre" | "one_acre" | "multi_acre" | "custom";
+  landSizeAcres?: number;
+  landPurpose?: "residential" | "commercial" | "agricultural";
+  status: "active" | "pending" | "sold" | "rented";
   bedrooms: number;
   bathrooms: number;
   squareFeet: number;
@@ -88,13 +100,13 @@ export interface Lead {
 
 export interface User {
   _id: string;
-  clerkId: string;
+  clerkId?: string;
   name: string;
   email: string;
   phone?: string;
   photo?: SanityImage;
   savedListings?: Property[];
-  createdAt: string;
+  createdAt?: string;
 }
 
 // Form data types
@@ -116,6 +128,7 @@ export interface AgentOnboardingData {
 export interface UserProfileData {
   name: string;
   phone: string;
+  email: string;
   photo?: SanityImage;
 }
 
@@ -131,8 +144,20 @@ export interface ListingFormData {
   title: string;
   description: string;
   price: number;
-  propertyType: "house" | "apartment" | "condo" | "townhouse" | "land";
-  status?: "active" | "pending" | "sold";
+  listingCategory: "rent" | "sale" | "airbnb";
+  propertyType:
+    | "house"
+    | "apartment"
+    | "bedsitter"
+    | "condo"
+    | "townhouse"
+    | "villa"
+    | "land"
+    | "farmland";
+  landSize?: "quarter_acre" | "half_acre" | "one_acre" | "multi_acre" | "custom";
+  landSizeAcres?: number;
+  landPurpose?: "residential" | "commercial" | "agricultural";
+  status?: "active" | "pending" | "sold" | "rented";
   bedrooms: number;
   bathrooms: number;
   squareFeet: number;

@@ -1,94 +1,109 @@
-import {
-  clerkClient,
-  clerkMiddleware,
-  createRouteMatcher,
-} from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { ACCESS_COOKIE } from "@/lib/api/constants";
 
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/saved(.*)",
-  "/profile(.*)",
-]);
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  "http://localhost:4000/v1";
 
-const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
+type MeResponse = {
+  id: string;
+  onboardingComplete: boolean;
+  roles: string[];
+  agent?: { onboardingComplete: boolean } | null;
+  subscription?: {
+    status: string;
+    currentPeriodEnd: string | null;
+  } | null;
+};
 
-const isAgentRoute = createRouteMatcher(["/dashboard(.*)"]);
+function isPublicPath(pathname: string) {
+  if (pathname === "/") return true;
+  return (
+    pathname.startsWith("/properties") ||
+    pathname.startsWith("/pricing") ||
+    pathname.startsWith("/sign-in") ||
+    pathname.startsWith("/sign-up") ||
+    pathname.startsWith("/studio") ||
+    pathname.startsWith("/api/")
+  );
+}
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/properties(.*)",
-  "/pricing(.*)",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/studio(.*)",
-]);
+function hasActivePlan(user: MeResponse) {
+  if (user.roles?.includes("ADMIN")) return true;
+  const sub = user.subscription;
+  if (!sub || sub.status !== "ACTIVE") return false;
+  if (!sub.currentPeriodEnd) return true;
+  return new Date(sub.currentPeriodEnd) > new Date();
+}
 
-export default clerkMiddleware(async (auth, req) => {
-  const { userId, has } = await auth();
+async function fetchMe(accessToken: string): Promise<MeResponse | null> {
+  try {
+    const res = await fetch(`${API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as MeResponse;
+  } catch {
+    return null;
+  }
+}
 
-  // Allow public routes
-  if (isPublicRoute(req)) {
+export default async function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
-  // Protect routes that require authentication
-  if ((isProtectedRoute(req) || isOnboardingRoute(req)) && !userId) {
-    const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("redirect_url", req.url);
-    return NextResponse.redirect(signInUrl);
+  const access = req.cookies.get(ACCESS_COOKIE)?.value;
+  if (!access) {
+    const signIn = new URL("/sign-in", req.url);
+    signIn.searchParams.set("redirect_url", req.url);
+    return NextResponse.redirect(signIn);
   }
 
-  // Check onboarding status for authenticated users on protected routes
-  if (userId && isProtectedRoute(req)) {
-    const clerk = await clerkClient();
-    const user = await clerk.users.getUser(userId);
-    const onboardingComplete = user.publicMetadata?.onboardingComplete;
-    if (!onboardingComplete) {
-      return NextResponse.redirect(new URL("/onboarding", req.url));
-    }
+  const user = await fetchMe(access);
+  if (!user) {
+    const signIn = new URL("/sign-in", req.url);
+    signIn.searchParams.set("redirect_url", req.url);
+    return NextResponse.redirect(signIn);
   }
 
-  // If user has completed onboarding but visits /onboarding, redirect to home
-  if (userId && isOnboardingRoute(req)) {
-    const clerk = await clerkClient();
-    const user = await clerk.users.getUser(userId);
-    const onboardingComplete = user.publicMetadata?.onboardingComplete;
-    if (onboardingComplete) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
+  const isOnboarding = pathname.startsWith("/onboarding");
+  const isProtected =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/saved") ||
+    pathname.startsWith("/profile");
+
+  if (isProtected && !user.onboardingComplete) {
+    return NextResponse.redirect(new URL("/onboarding", req.url));
   }
 
-  // Agent routes require active subscription + completed agent onboarding
-  if (isAgentRoute(req) && userId) {
-    const hasAgentPlan = has({ plan: "agent" });
-    if (!hasAgentPlan) {
+  if (isOnboarding && user.onboardingComplete) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
+  if (pathname.startsWith("/dashboard")) {
+    if (!hasActivePlan(user)) {
       return NextResponse.redirect(new URL("/pricing", req.url));
     }
-
-    // Check agent onboarding status (stored in Clerk metadata)
-    const clerk = await clerkClient();
-    const user = await clerk.users.getUser(userId);
-    const agentOnboardingComplete =
-      user.publicMetadata?.agentOnboardingComplete;
-
-    // If not onboarded, redirect to agent onboarding (unless already there)
     if (
-      !agentOnboardingComplete &&
-      !req.nextUrl.pathname.startsWith("/dashboard/onboarding")
+      !user.agent?.onboardingComplete &&
+      !pathname.startsWith("/dashboard/onboarding")
     ) {
       return NextResponse.redirect(new URL("/dashboard/onboarding", req.url));
     }
   }
 
   return NextResponse.next();
-});
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
     "/(api|trpc)(.*)",
   ],
 };

@@ -1,4 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
+import { getSessionUser } from "@/lib/api/session";
+import { redirect } from "next/navigation";
 import {
   ArrowRight,
   Home,
@@ -25,7 +26,9 @@ export const metadata: Metadata = {
 
 export default async function DashboardPage() {
   // Middleware guarantees: authenticated + has agent plan + onboarding complete
-  const { userId } = await auth();
+  const session = await getSessionUser();
+  if (!session) redirect("/sign-in");
+  const userId = session.id;
 
   const { data: agent } = await sanityFetch({
     query: AGENT_DASHBOARD_QUERY,

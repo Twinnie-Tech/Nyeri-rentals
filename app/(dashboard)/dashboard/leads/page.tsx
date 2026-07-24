@@ -1,4 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
+import { getSessionUser } from "@/lib/api/session";
+import { redirect } from "next/navigation";
 import { ExternalLink, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { LeadStatusSelect } from "@/components/dashboard/LeadStatusSelect";
@@ -21,7 +22,9 @@ import type { Lead } from "@/types";
 
 export default async function LeadsPage() {
   // Middleware guarantees: authenticated + has agent plan + onboarding complete
-  const { userId } = await auth();
+  const session = await getSessionUser();
+  if (!session) redirect("/sign-in");
+  const userId = session.id;
 
   const { data: agent } = await sanityFetch({
     query: AGENT_ID_BY_USER_QUERY,

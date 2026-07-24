@@ -3,6 +3,7 @@
 import {
   ArrowLeft,
   CreditCard,
+  FileSpreadsheet,
   Home,
   LayoutDashboard,
   ListPlus,
@@ -39,6 +40,12 @@ const navItems = [
     description: "Buyer inquiries",
   },
   {
+    href: "/dashboard/invoices",
+    label: "Invoices",
+    icon: FileSpreadsheet,
+    description: "Payments and receipts",
+  },
+  {
     href: "/dashboard/profile",
     label: "Agent Profile",
     icon: User,
@@ -67,7 +74,7 @@ export function DashboardSidebar() {
             className="h-4 w-4 transition-transform group-hover:-translate-x-1"
             aria-hidden="true"
           />
-          <span className="text-sm font-medium">Back to Nyeri Rentals</span>
+          <span className="text-sm font-medium">Back to GreenKey Realty</span>
         </Link>
 
         {/* Dashboard Header */}

@@ -1,4 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
+import { getSessionUser } from "@/lib/api/session";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { sanityFetch } from "@/lib/sanity/live";
 import {
@@ -41,7 +42,9 @@ export type AnalyticsData = {
 
 export default async function AnalyticsPage() {
   // Middleware guarantees: authenticated + has agent plan + onboarding complete
-  const { userId } = await auth();
+  const session = await getSessionUser();
+  if (!session) redirect("/sign-in");
+  const userId = session.id;
 
   const { data: agent } = await sanityFetch({
     query: AGENT_ID_BY_USER_QUERY,

@@ -1,0 +1,57 @@
+# GreenKey Nest API
+
+Backend-for-Frontend for GreenKey Realty web and future React Native apps.
+
+## Stack
+
+- NestJS + JWT (**phone or email OTP**; optional email/password)
+- PostgreSQL + Prisma
+- Redis (OTP, rate limits, M-Pesa idempotency)
+- M-Pesa Daraja STK Push + bank transfer verification
+- Sanity write token for CMS mutations (listings content stays in Sanity)
+
+## Quick start
+
+From repo root:
+
+```bash
+docker compose up -d
+cp apps/api/.env.example apps/api/.env
+pnpm install
+pnpm --filter @greenkey/api prisma:generate
+pnpm --filter @greenkey/api prisma:migrate
+pnpm --filter @greenkey/api dev
+```
+
+Postgres is exposed on **host port 5433** (maps to container 5432) so it does not clash with a local PostgreSQL install on 5432.
+
+| Service | Connection |
+|---------|------------|
+| Postgres | `localhost:5433` · user/db/pass `greenkey` |
+| Redis | `localhost:6379` · no password |
+
+API base: `http://localhost:4000/v1`
+
+Web app: set `NEXT_PUBLIC_API_URL=http://localhost:4000/v1` in `.env.local`.
+
+## Key routes
+
+| Method | Path | Auth |
+|--------|------|------|
+| POST | `/auth/otp/request` | public (`channel`: `phone` \| `email`) |
+| POST | `/auth/otp/verify` | public |
+| POST | `/auth/login` | public |
+| GET | `/auth/me` | JWT |
+| POST | `/users/onboarding` | JWT |
+| PATCH | `/users/me` | JWT |
+| GET | `/billing/plan` | public |
+| POST | `/billing/mpesa/stk` | JWT |
+| POST | `/billing/mpesa/callback` | public (Daraja) |
+| POST | `/billing/bank` | JWT |
+| GET | `/billing/payments` | JWT |
+| GET | `/admin/payments/pending` | ADMIN |
+| GET | `/health` | public |
+
+In development without `MPESA_*` credentials, STK creates a pending payment; complete it with `POST /billing/mpesa/simulate-complete/:paymentId`.
+
+OTP codes are logged to the API console when `SMS_PROVIDER=console` / `EMAIL_PROVIDER=console` (and returned as `devCode`).

@@ -17,12 +17,39 @@ export const FEATURED_PROPERTIES_QUERY = defineQuery(/* groq */ `
     title,
     "slug": slug.current,
     price,
+    listingCategory,
+    propertyType,
+    landSize,
+    landPurpose,
     bedrooms,
     bathrooms,
     squareFeet,
     address,
     "image": images[0] { ${imageFragment} },
     location
+  }
+`);
+
+export const PROPERTIES_BY_CATEGORY_QUERY = defineQuery(/* groq */ `
+  *[_type == "property" && status == "active"
+    && ($category == "" || listingCategory == $category)
+    && ($type == "" || propertyType == $type)
+  ] | order(featured desc, createdAt desc) [0...$limit] {
+    _id,
+    title,
+    "slug": slug.current,
+    price,
+    listingCategory,
+    propertyType,
+    landSize,
+    landPurpose,
+    bedrooms,
+    bathrooms,
+    squareFeet,
+    address,
+    "image": images[0] { ${imageFragment} },
+    location,
+    featured
   }
 `);
 
@@ -33,6 +60,9 @@ export const PROPERTIES_SEARCH_QUERY = defineQuery(/* groq */ `
     && ($beds == 0 || ($bedsIsPlus == true && bedrooms >= $beds) || ($bedsIsPlus == false && bedrooms == $beds))
     && ($baths == 0 || ($bathsIsPlus == true && bathrooms >= $baths) || ($bathsIsPlus == false && bathrooms == $baths))
     && ($type == "" || propertyType == $type)
+    && ($category == "" || listingCategory == $category)
+    && ($landPurpose == "" || landPurpose == $landPurpose)
+    && ($landSize == "" || landSize == $landSize)
     && ($city == "" || lower(address.city) match $city + "*" || lower(address.state) match $city + "*" || lower(address.zipCode) match $city + "*")
     && ($minSqft == 0 || squareFeet >= $minSqft)
     && ($maxSqft == 0 || squareFeet <= $maxSqft)
@@ -50,6 +80,11 @@ export const PROPERTIES_SEARCH_QUERY = defineQuery(/* groq */ `
     "slug": slug.current,
     price,
     originalPrice,
+    listingCategory,
+    propertyType,
+    landSize,
+    landSizeAcres,
+    landPurpose,
     bedrooms,
     bathrooms,
     squareFeet,
@@ -71,6 +106,9 @@ export const PROPERTIES_COUNT_QUERY = defineQuery(/* groq */ `
     && ($beds == 0 || ($bedsIsPlus == true && bedrooms >= $beds) || ($bedsIsPlus == false && bedrooms == $beds))
     && ($baths == 0 || ($bathsIsPlus == true && bathrooms >= $baths) || ($bathsIsPlus == false && bathrooms == $baths))
     && ($type == "" || propertyType == $type)
+    && ($category == "" || listingCategory == $category)
+    && ($landPurpose == "" || landPurpose == $landPurpose)
+    && ($landSize == "" || landSize == $landSize)
     && ($city == "" || lower(address.city) match $city + "*" || lower(address.state) match $city + "*" || lower(address.zipCode) match $city + "*")
     && ($minSqft == 0 || squareFeet >= $minSqft)
     && ($maxSqft == 0 || squareFeet <= $maxSqft)
@@ -92,7 +130,11 @@ export const PROPERTY_DETAIL_QUERY = defineQuery(/* groq */ `
     title,
     description,
     price,
+    listingCategory,
     propertyType,
+    landSize,
+    landSizeAcres,
+    landPurpose,
     status,
     bedrooms,
     bathrooms,
@@ -197,7 +239,11 @@ export const LISTING_BY_ID_QUERY = defineQuery(/* groq */ `
     title,
     description,
     price,
+    listingCategory,
     propertyType,
+    landSize,
+    landSizeAcres,
+    landPurpose,
     status,
     bedrooms,
     bathrooms,
@@ -227,6 +273,23 @@ export const USER_SAVED_LISTINGS_QUERY = defineQuery(/* groq */ `
       status
     }
   }.savedListings
+`);
+
+export const PROPERTIES_BY_IDS_QUERY = defineQuery(/* groq */ `
+  *[_type == "property" && _id in $ids] {
+    _id,
+    title,
+    "slug": slug.current,
+    price,
+    listingCategory,
+    propertyType,
+    bedrooms,
+    bathrooms,
+    squareFeet,
+    address,
+    "image": images[0] { ${imageFragment} },
+    status
+  }
 `);
 
 // ============================================

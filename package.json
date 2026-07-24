@@ -4,7 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:api": "pnpm --filter @greenkey/api dev",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
     "build": "next build",
+    "build:api": "pnpm --filter @greenkey/api build",
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
@@ -13,8 +17,7 @@
     "seed": "npx tsx scripts/seed/seed.ts",
     "seed:clean": "npx tsx scripts/seed/seed.ts --clean"
   },
-   "dependencies": {
-    "@clerk/nextjs": "^6.36.10",
+  "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@mapbox/mapbox-sdk": "^0.16.2",

@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+# nest api
+/apps/api/dist/
+/apps/api/node_modules/
+
 # production
 /build
 

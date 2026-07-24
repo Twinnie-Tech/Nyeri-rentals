@@ -1,4 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
+import { getSessionUser } from "@/lib/api/session";
+import { redirect } from "next/navigation";
 import { MoreHorizontal, Pencil, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -32,7 +33,9 @@ import type { Property } from "@/types";
 
 export default async function ListingsPage() {
   // Middleware guarantees: authenticated + has agent plan + onboarding complete
-  const { userId } = await auth();
+  const session = await getSessionUser();
+  if (!session) redirect("/sign-in");
+  const userId = session.id;
 
   const { data: agent } = await sanityFetch({
     query: AGENT_ID_BY_USER_QUERY,
