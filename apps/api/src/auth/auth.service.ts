@@ -10,6 +10,8 @@ import * as bcrypt from "bcryptjs";
 import { createHash, randomInt, randomBytes } from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
 import { RedisService } from "../redis/redis.service";
+import { MailService } from "../mail/mail.service";
+import { MessagingService } from "../messaging/messaging.service";
 import {
   LoginEmailDto,
   RegisterEmailDto,
@@ -57,6 +59,8 @@ export class AuthService {
     private redis: RedisService,
     private jwt: JwtService,
     private config: ConfigService,
+    private mail: MailService,
+    private messaging: MessagingService,
   ) {}
 
   private otpKey(channel: "phone" | "email", target: string) {
@@ -93,15 +97,28 @@ export class AuthService {
     const ttl = Number(this.config.get("OTP_TTL_SECONDS") || 300);
     await this.redis.set(this.otpKey(channel, target), code, ttl);
 
-    const smsProvider = this.config.get("SMS_PROVIDER") || "console";
-    const emailProvider = this.config.get("EMAIL_PROVIDER") || "console";
-    const isDev =
-      (channel === "phone" && smsProvider === "console") ||
-      (channel === "email" && emailProvider === "console");
+    let previewOnly = false;
+    let channels: { sms?: boolean; whatsapp?: boolean } | undefined;
 
-    if (isDev) {
-      // eslint-disable-next-line no-console
-      console.log(`[OTP:${channel}] ${target} => ${code} (expires in ${ttl}s)`);
+    if (channel === "email") {
+      const sent = await this.mail.sendOtpEmail(target, code, ttl);
+      previewOnly = sent.previewOnly;
+    } else {
+      const sent = await this.messaging.sendOtpPhone(target, code, ttl);
+      previewOnly = sent.previewOnly;
+      channels = {
+        sms: Boolean(
+          sent.sms &&
+            sent.sms.messageId !== "failed" &&
+            sent.sms.provider !== "off",
+        ),
+        whatsapp: this.messaging.isWhatsAppEnabled() &&
+          Boolean(
+            sent.whatsapp &&
+              sent.whatsapp.provider !== "off" &&
+              sent.whatsapp.messageId !== "failed",
+          ),
+      };
     }
 
     return {
@@ -109,7 +126,9 @@ export class AuthService {
       channel,
       ...(channel === "phone" ? { phone: target } : { email: target }),
       expiresIn: ttl,
-      ...(isDev ? { devCode: code } : {}),
+      delivery: previewOnly ? "preview" : "sent",
+      ...(channels ? { channels } : {}),
+      ...(previewOnly ? { devCode: code } : {}),
     };
   }
 
@@ -134,7 +153,9 @@ export class AuthService {
 
   private async verifyPhoneOtp(phone: string, name?: string) {
     let user = await this.prisma.user.findUnique({ where: { phone } });
+    let isNew = false;
     if (!user) {
+      isNew = true;
       user = await this.prisma.user.create({
         data: {
           phone,
@@ -153,12 +174,20 @@ export class AuthService {
         },
       });
     }
+    if (isNew) {
+      this.queueWelcomePhone(phone, user.name);
+      if (user.email) {
+        this.queueWelcomeEmail(user.email, user.name);
+      }
+    }
     return this.issueTokens(user.id, user.phone);
   }
 
   private async verifyEmailOtp(email: string, name?: string) {
     let user = await this.prisma.user.findUnique({ where: { email } });
+    let isNew = false;
     if (!user) {
+      isNew = true;
       user = await this.prisma.user.create({
         data: {
           email,
@@ -176,6 +205,9 @@ export class AuthService {
           ...(name && !user.name ? { name } : {}),
         },
       });
+    }
+    if (isNew) {
+      this.queueWelcomeEmail(email, user.name);
     }
     return this.issueTokens(user.id, user.phone);
   }
@@ -203,7 +235,30 @@ export class AuthService {
       },
     });
     await this.prisma.subscription.create({ data: { userId: user.id } });
+    this.queueWelcomeEmail(email, user.name);
+    if (phone) this.queueWelcomePhone(phone, user.name);
     return this.issueTokens(user.id, user.phone);
+  }
+
+  /** Fire-and-forget so signup is never blocked by mail failures. */
+  private queueWelcomeEmail(email: string, name?: string | null) {
+    void this.mail.sendWelcomeEmail(email, name).catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error(
+        `[welcome email] failed for ${email}`,
+        err instanceof Error ? err.message : err,
+      );
+    });
+  }
+
+  private queueWelcomePhone(phone: string, name?: string | null) {
+    void this.messaging.sendWelcomePhone(phone, name).catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error(
+        `[welcome sms/whatsapp] failed for ${phone}`,
+        err instanceof Error ? err.message : err,
+      );
+    });
   }
 
   async loginEmail(dto: LoginEmailDto) {

@@ -107,6 +107,184 @@ export const property = defineType({
       hidden: ({ document }) =>
         !["land", "farmland"].includes(String(document?.propertyType || "")),
     }),
+    // --- Rent-specific ---
+    defineField({
+      name: "furnished",
+      title: "Furnishing",
+      type: "string",
+      options: {
+        list: [
+          { title: "Unfurnished", value: "unfurnished" },
+          { title: "Semi-furnished", value: "semi_furnished" },
+          { title: "Fully furnished", value: "furnished" },
+        ],
+      },
+      hidden: ({ document }) =>
+        document?.listingCategory !== "rent" ||
+        ["land", "farmland"].includes(String(document?.propertyType || "")),
+    }),
+    defineField({
+      name: "depositAmount",
+      title: "Security Deposit (KES)",
+      type: "number",
+      validation: (Rule) => Rule.min(0),
+      hidden: ({ document }) => document?.listingCategory !== "rent",
+    }),
+    defineField({
+      name: "availableFrom",
+      title: "Available From",
+      type: "date",
+      hidden: ({ document }) => document?.listingCategory !== "rent",
+    }),
+    defineField({
+      name: "petsAllowed",
+      title: "Pets Allowed",
+      type: "boolean",
+      initialValue: false,
+      hidden: ({ document }) =>
+        document?.listingCategory !== "rent" ||
+        ["land", "farmland"].includes(String(document?.propertyType || "")),
+    }),
+    // --- Sale-specific ---
+    defineField({
+      name: "titleDeedReady",
+      title: "Title Deed Ready",
+      type: "boolean",
+      initialValue: false,
+      hidden: ({ document }) =>
+        document?.listingCategory !== "sale" &&
+        !["land", "farmland"].includes(String(document?.propertyType || "")),
+    }),
+    defineField({
+      name: "serviceCharge",
+      title: "Service Charge (KES / month)",
+      type: "number",
+      validation: (Rule) => Rule.min(0),
+      hidden: ({ document }) =>
+        document?.listingCategory !== "sale" ||
+        !["apartment", "condo", "townhouse"].includes(
+          String(document?.propertyType || ""),
+        ),
+    }),
+    // --- Airbnb / short stay ---
+    defineField({
+      name: "maxGuests",
+      title: "Max Guests",
+      type: "number",
+      validation: (Rule) => Rule.min(1),
+      hidden: ({ document }) => document?.listingCategory !== "airbnb",
+    }),
+    defineField({
+      name: "minNights",
+      title: "Minimum Nights",
+      type: "number",
+      validation: (Rule) => Rule.min(1),
+      hidden: ({ document }) => document?.listingCategory !== "airbnb",
+    }),
+    defineField({
+      name: "cleaningFee",
+      title: "Cleaning Fee (KES)",
+      type: "number",
+      validation: (Rule) => Rule.min(0),
+      hidden: ({ document }) => document?.listingCategory !== "airbnb",
+    }),
+    defineField({
+      name: "checkInTime",
+      title: "Check-in Time",
+      type: "string",
+      description: "e.g. 14:00",
+      hidden: ({ document }) => document?.listingCategory !== "airbnb",
+    }),
+    defineField({
+      name: "checkOutTime",
+      title: "Check-out Time",
+      type: "string",
+      description: "e.g. 10:00",
+      hidden: ({ document }) => document?.listingCategory !== "airbnb",
+    }),
+    // --- Villa / luxury ---
+    defineField({
+      name: "hasPool",
+      title: "Swimming Pool",
+      type: "boolean",
+      initialValue: false,
+      hidden: ({ document }) => document?.propertyType !== "villa",
+    }),
+    defineField({
+      name: "hasStaffQuarters",
+      title: "Staff Quarters",
+      type: "boolean",
+      initialValue: false,
+      hidden: ({ document }) => document?.propertyType !== "villa",
+    }),
+    defineField({
+      name: "hasGarden",
+      title: "Private Garden",
+      type: "boolean",
+      initialValue: false,
+      hidden: ({ document }) => document?.propertyType !== "villa",
+    }),
+    defineField({
+      name: "hasBackupPower",
+      title: "Backup Power (generator / solar)",
+      type: "boolean",
+      initialValue: false,
+      hidden: ({ document }) => document?.propertyType !== "villa",
+    }),
+    // --- Land / farmland extras ---
+    defineField({
+      name: "roadAccess",
+      title: "Road Access",
+      type: "string",
+      options: {
+        list: [
+          { title: "Tarmac / paved", value: "tarmac" },
+          { title: "Murram / gravel", value: "murram" },
+          { title: "Footpath only", value: "footpath" },
+          { title: "No road access", value: "none" },
+        ],
+      },
+      hidden: ({ document }) =>
+        !["land", "farmland"].includes(String(document?.propertyType || "")),
+    }),
+    defineField({
+      name: "fenced",
+      title: "Fenced / Bordered",
+      type: "boolean",
+      initialValue: false,
+      hidden: ({ document }) =>
+        !["land", "farmland"].includes(String(document?.propertyType || "")),
+    }),
+    defineField({
+      name: "waterSource",
+      title: "Water Source",
+      type: "string",
+      options: {
+        list: [
+          { title: "Borehole", value: "borehole" },
+          { title: "River / stream", value: "river" },
+          { title: "Piped water", value: "piped" },
+          { title: "Rain harvest", value: "rain" },
+          { title: "None / unknown", value: "none" },
+        ],
+      },
+      hidden: ({ document }) => document?.propertyType !== "farmland",
+    }),
+    defineField({
+      name: "cropsSuitable",
+      title: "Crops / Use Suitable",
+      type: "string",
+      description: "e.g. maize, dairy, horticulture",
+      hidden: ({ document }) => document?.propertyType !== "farmland",
+    }),
+    defineField({
+      name: "parkingSpaces",
+      title: "Parking Spaces",
+      type: "number",
+      validation: (Rule) => Rule.min(0),
+      hidden: ({ document }) =>
+        ["land", "farmland"].includes(String(document?.propertyType || "")),
+    }),
     defineField({
       name: "status",
       title: "Status",
@@ -232,6 +410,7 @@ export const property = defineType({
       title: "Open House / Viewing Date",
       type: "datetime",
       description: "Scheduled viewing date/time (if any)",
+      hidden: ({ document }) => document?.listingCategory !== "sale",
     }),
     defineField({
       name: "originalPrice",
@@ -239,6 +418,7 @@ export const property = defineType({
       type: "number",
       description: "Original listing price (if reduced)",
       validation: (Rule) => Rule.positive(),
+      hidden: ({ document }) => document?.listingCategory !== "sale",
     }),
     defineField({
       name: "featured",

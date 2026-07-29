@@ -25,6 +25,10 @@ export function PhoneOtpSignIn() {
   const [name, setName] = useState("");
   const [step, setStep] = useState<"identity" | "code">("identity");
   const [devCode, setDevCode] = useState<string | null>(null);
+  const [phoneChannels, setPhoneChannels] = useState<{
+    sms?: boolean;
+    whatsapp?: boolean;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -36,6 +40,7 @@ export function PhoneOtpSignIn() {
     setError(null);
     setCode("");
     setDevCode(null);
+    setPhoneChannels(null);
     setStep("identity");
   }
 
@@ -74,6 +79,9 @@ export function PhoneOtpSignIn() {
       if (data.phone) setPhone(data.phone);
       if (data.email) setEmail(data.email);
       setDevCode(data.devCode || null);
+      setPhoneChannels(
+        channel === "phone" && data.channels ? data.channels : null,
+      );
       setStep("code");
     });
   }
@@ -194,7 +202,7 @@ export function PhoneOtpSignIn() {
             {pending
               ? "Sending…"
               : channel === "phone"
-                ? "Send SMS code"
+                ? "Send SMS & WhatsApp code"
                 : "Send email code"}
           </Button>
         </form>
@@ -203,12 +211,35 @@ export function PhoneOtpSignIn() {
           <p className="text-sm text-muted-foreground">
             Code sent to{" "}
             <span className="text-foreground font-medium">{destination}</span>
+            {channel === "phone" && phoneChannels?.whatsapp
+              ? " via SMS and WhatsApp"
+              : channel === "phone"
+                ? " via SMS"
+                : ""}
           </p>
           {devCode ? (
             <p className="text-xs rounded-lg bg-secondary/40 px-3 py-2">
               Dev OTP: <strong>{devCode}</strong>
+              {channel === "phone" ? (
+                <span className="block mt-1 text-muted-foreground">
+                  Also logged as SMS
+                  {phoneChannels?.whatsapp ? " and WhatsApp" : ""} in the API
+                  console.
+                </span>
+              ) : null}
             </p>
-          ) : null}
+          ) : channel === "email" ? (
+            <p className="text-xs rounded-lg bg-secondary/40 px-3 py-2">
+              Check your inbox (and spam folder) for the verification code. Works
+              with Gmail, Outlook, Yahoo, and other providers.
+            </p>
+          ) : (
+            <p className="text-xs rounded-lg bg-secondary/40 px-3 py-2">
+              {phoneChannels?.whatsapp
+                ? "We sent the same code by SMS and WhatsApp. Use either message."
+                : "We sent a verification code by SMS to this number."}
+            </p>
+          )}
           <div className="space-y-2">
             <Label htmlFor="code">OTP code</Label>
             <Input

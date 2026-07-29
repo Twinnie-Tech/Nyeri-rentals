@@ -6,6 +6,8 @@ import {
 } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
+import { MailService } from "../mail/mail.service";
+import { MessagingService } from "../messaging/messaging.service";
 import { CompleteOnboardingDto, UpdateProfileDto } from "./users.dto";
 
 function normalizePhone(phone: string): string {
@@ -29,7 +31,11 @@ function normalizeEmail(email: string): string {
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mail: MailService,
+    private messaging: MessagingService,
+  ) {}
 
   private async assertPhoneAvailable(userId: string, phone: string) {
     const existing = await this.prisma.user.findUnique({ where: { phone } });
@@ -56,8 +62,13 @@ export class UsersService {
     if (phone) await this.assertPhoneAvailable(userId, phone);
     if (email) await this.assertEmailAvailable(userId, email);
 
+    const before = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { email: true, phone: true },
+    });
+
     try {
-      return await this.prisma.user.update({
+      const user = await this.prisma.user.update({
         where: { id: userId },
         data: {
           name: dto.name,
@@ -74,6 +85,28 @@ export class UsersService {
           roles: true,
         },
       });
+
+      // First time this contact channel is added during onboarding
+      if (email && !before?.email) {
+        void this.mail.sendWelcomeEmail(email, user.name).catch((err) => {
+          // eslint-disable-next-line no-console
+          console.error(
+            `[welcome email] failed for ${email}`,
+            err instanceof Error ? err.message : err,
+          );
+        });
+      }
+      if (phone && !before?.phone) {
+        void this.messaging.sendWelcomePhone(phone, user.name).catch((err) => {
+          // eslint-disable-next-line no-console
+          console.error(
+            `[welcome sms/whatsapp] failed for ${phone}`,
+            err instanceof Error ? err.message : err,
+          );
+        });
+      }
+
+      return user;
     } catch (err) {
       this.rethrowUniqueConflict(err);
     }

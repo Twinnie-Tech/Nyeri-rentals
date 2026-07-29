@@ -14,7 +14,7 @@ export const PROPERTY_TYPES = [
   { value: "bedsitter", label: "Bedsitter" },
   { value: "condo", label: "Condo" },
   { value: "townhouse", label: "Townhouse" },
-  { value: "villa", label: "Villa" },
+  { value: "villa", label: "Luxury Villa" },
   { value: "land", label: "Plot / Land" },
   { value: "farmland", label: "Farmland" },
 ] as const;
@@ -33,6 +33,27 @@ export const LAND_PURPOSES = [
   { value: "agricultural", label: "Agricultural / Farming" },
 ] as const;
 
+export const FURNISHED_OPTIONS = [
+  { value: "unfurnished", label: "Unfurnished" },
+  { value: "semi_furnished", label: "Semi-furnished" },
+  { value: "furnished", label: "Fully furnished" },
+] as const;
+
+export const ROAD_ACCESS_OPTIONS = [
+  { value: "tarmac", label: "Tarmac / paved" },
+  { value: "murram", label: "Murram / gravel" },
+  { value: "footpath", label: "Footpath only" },
+  { value: "none", label: "No road access" },
+] as const;
+
+export const WATER_SOURCE_OPTIONS = [
+  { value: "borehole", label: "Borehole" },
+  { value: "river", label: "River / stream" },
+  { value: "piped", label: "Piped water" },
+  { value: "rain", label: "Rain harvest" },
+  { value: "none", label: "None / unknown" },
+] as const;
+
 export const LISTING_STATUSES = [
   { value: "active", label: "Active" },
   { value: "pending", label: "Pending" },
@@ -47,6 +68,18 @@ export type LandPurposeValue = (typeof LAND_PURPOSES)[number]["value"];
 
 export function isLandType(type?: string | null) {
   return type === "land" || type === "farmland";
+}
+
+export function isVillaType(type?: string | null) {
+  return type === "villa";
+}
+
+export function isFarmlandType(type?: string | null) {
+  return type === "farmland";
+}
+
+export function showsBuildingDetails(type?: string | null) {
+  return !isLandType(type);
 }
 
 export function getListingCategoryLabel(category?: string | null) {

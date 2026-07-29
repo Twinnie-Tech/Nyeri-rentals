@@ -133,7 +133,9 @@ Sanity Studio (embedded): [http://localhost:3000/studio](http://localhost:3000/s
 ## Auth & onboarding
 
 - Sign-in: **phone OTP** (country code + flag) or **email OTP**
-- Dev OTP: logged in the API console; also returned as `devCode` when `SMS_PROVIDER` / `EMAIL_PROVIDER` is `console`
+- Email OTP: `console` (local), `mailtrap` (QA), `mailtrap-send` / `resend` / `sendgrid` / `smtp` (prod) — see [`apps/api/docs/EMAIL.md`](apps/api/docs/EMAIL.md)
+- Phone OTP: SMS + WhatsApp (`console` / Africa's Talking / Twilio / Meta) — see [`apps/api/docs/MESSAGING.md`](apps/api/docs/MESSAGING.md)
+- Dev OTP: logged in the API console; also returned as `devCode` only when using `console`
 - Onboarding collects **name, email, and phone** (both contact fields editable)
 - Profile page allows editing name, email, and phone (unique constraints with clear errors)
 
@@ -173,6 +175,8 @@ Base URL: `http://localhost:4000/v1`
 | Agents | `POST /agents/ensure`, `POST /agents/onboarding` |
 | Billing | `GET /billing/plan`, `POST /billing/mpesa/stk`, `GET /billing/payments` |
 | Health | `GET /health` |
+
+**Swagger UI:** [http://localhost:4000/docs](http://localhost:4000/docs) — interactive docs to explore and test the API (use **Authorize** with a JWT from OTP verify).
 
 Full route list: [`apps/api/README.md`](apps/api/README.md)
 

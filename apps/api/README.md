@@ -32,6 +32,8 @@ Postgres is exposed on **host port 5433** (maps to container 5432) so it does no
 
 API base: `http://localhost:4000/v1`
 
+**Swagger UI:** [http://localhost:4000/docs](http://localhost:4000/docs) — browse and try every endpoint (Authorize with a JWT from OTP verify).
+
 Web app: set `NEXT_PUBLIC_API_URL=http://localhost:4000/v1` in `.env.local`.
 
 ## Key routes
@@ -55,3 +57,48 @@ Web app: set `NEXT_PUBLIC_API_URL=http://localhost:4000/v1` in `.env.local`.
 In development without `MPESA_*` credentials, STK creates a pending payment; complete it with `POST /billing/mpesa/simulate-complete/:paymentId`.
 
 OTP codes are logged to the API console when `SMS_PROVIDER=console` / `EMAIL_PROVIDER=console` (and returned as `devCode`).
+
+## Phone OTP (SMS + WhatsApp)
+
+Full guide: [`docs/MESSAGING.md`](./docs/MESSAGING.md).
+
+Phone OTP is delivered on **SMS and WhatsApp**. First-time phone registration also sends a welcome SMS + WhatsApp.
+
+| Env | SMS | WhatsApp |
+|-----|-----|----------|
+| Local | `console` | `console` |
+| QA | `africastalking` | **`infobip`** (trial test sender) |
+| Prod | AT / Twilio live | Infobip own sender + templates |
+
+Infobip onboarding: [portal.infobip.com/onboarding-guide](https://portal.infobip.com/onboarding-guide) — see [`docs/MESSAGING.md`](./docs/MESSAGING.md).
+
+## Email OTP
+
+Full guide: [`docs/EMAIL.md`](./docs/EMAIL.md). Env templates: `.env.example`, `.env.staging.example`, `.env.production.example`.
+
+| Environment | `EMAIL_PROVIDER` | Notes |
+|-------------|------------------|-------|
+| Local | `console` | Logs code + returns `devCode` |
+| QA / staging | `mailtrap` | Mailtrap **Email Testing** — open [mailtrap.io](https://mailtrap.io) inbox |
+| Production | `mailtrap-send` / `resend` / `sendgrid` / `smtp` | Real inboxes; verified domain + SPF/DKIM/DMARC |
+
+**QA — Mailtrap Testing**
+
+```env
+EMAIL_PROVIDER=mailtrap
+MAIL_FROM_NAME=GreenKey Realty
+MAIL_FROM_EMAIL=noreply@greenkey.test
+MAILTRAP_USER=…   # Email Testing → SMTP Settings
+MAILTRAP_PASS=…
+```
+
+**Production — Mailtrap Sending** (or Resend / SendGrid — see `docs/EMAIL.md`)
+
+```env
+EMAIL_PROVIDER=mailtrap-send
+MAIL_FROM_EMAIL=noreply@yourdomain.com
+MAILTRAP_USER=api
+MAILTRAP_PASS=…   # Sending stream token
+```
+
+When any non-`console` provider is used, `devCode` is **not** returned.

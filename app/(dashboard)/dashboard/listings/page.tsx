@@ -29,6 +29,11 @@ import {
   AGENT_ID_BY_USER_QUERY,
   AGENT_LISTINGS_QUERY,
 } from "@/lib/sanity/queries";
+import {
+  getListingCategoryLabel,
+  getPropertyTypeLabel,
+  isLandType,
+} from "@/lib/property-categories";
 import type { Property } from "@/types";
 
 export default async function ListingsPage() {
@@ -116,6 +121,10 @@ export default async function ListingsPage() {
                         >
                           {listing.title}
                         </Link>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {getListingCategoryLabel(listing.listingCategory)} ·{" "}
+                          {getPropertyTypeLabel(listing.propertyType)}
+                        </p>
                       </div>
                     </div>
                   </TableCell>
@@ -129,7 +138,9 @@ export default async function ListingsPage() {
                     />
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {listing.bedrooms} beds • {listing.bathrooms} baths
+                    {isLandType(listing.propertyType)
+                      ? "Land / plot"
+                      : `${listing.bedrooms} beds • ${listing.bathrooms} baths`}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {formatDate(listing.createdAt)}

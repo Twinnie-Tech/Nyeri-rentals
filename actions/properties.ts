@@ -47,6 +47,28 @@ interface ListingFormDataWithImages {
   landSize?: "quarter_acre" | "half_acre" | "one_acre" | "multi_acre" | "custom";
   landSizeAcres?: number;
   landPurpose?: "residential" | "commercial" | "agricultural";
+  furnished?: "unfurnished" | "semi_furnished" | "furnished";
+  depositAmount?: number;
+  availableFrom?: string;
+  petsAllowed?: boolean;
+  titleDeedReady?: boolean;
+  serviceCharge?: number;
+  originalPrice?: number;
+  openHouseDate?: string;
+  maxGuests?: number;
+  minNights?: number;
+  cleaningFee?: number;
+  checkInTime?: string;
+  checkOutTime?: string;
+  hasPool?: boolean;
+  hasStaffQuarters?: boolean;
+  hasGarden?: boolean;
+  hasBackupPower?: boolean;
+  roadAccess?: "tarmac" | "murram" | "footpath" | "none";
+  fenced?: boolean;
+  waterSource?: "borehole" | "river" | "piped" | "rain" | "none";
+  cropsSuitable?: string;
+  parkingSpaces?: number;
   status?: "active" | "pending" | "sold" | "rented";
   bedrooms: number;
   bathrooms: number;
@@ -69,6 +91,33 @@ function slugify(text: string): string {
     .replace(/\s+/g, "-")
     .replace(/--+/g, "-")
     .trim();
+}
+
+function categoryFields(data: ListingFormDataWithImages) {
+  return {
+    furnished: data.furnished,
+    depositAmount: data.depositAmount,
+    availableFrom: data.availableFrom,
+    petsAllowed: data.petsAllowed,
+    titleDeedReady: data.titleDeedReady,
+    serviceCharge: data.serviceCharge,
+    originalPrice: data.originalPrice,
+    openHouseDate: data.openHouseDate,
+    maxGuests: data.maxGuests,
+    minNights: data.minNights,
+    cleaningFee: data.cleaningFee,
+    checkInTime: data.checkInTime,
+    checkOutTime: data.checkOutTime,
+    hasPool: data.hasPool,
+    hasStaffQuarters: data.hasStaffQuarters,
+    hasGarden: data.hasGarden,
+    hasBackupPower: data.hasBackupPower,
+    roadAccess: data.roadAccess,
+    fenced: data.fenced,
+    waterSource: data.waterSource,
+    cropsSuitable: data.cropsSuitable,
+    parkingSpaces: data.parkingSpaces,
+  };
 }
 
 export async function createListing(
@@ -106,6 +155,7 @@ export async function createListing(
       landSize: data.landSize,
       landSizeAcres: data.landSizeAcres,
       landPurpose: data.landPurpose,
+      ...categoryFields(data),
       status: "active",
       bedrooms: data.bedrooms,
       bathrooms: data.bathrooms,
@@ -188,6 +238,7 @@ export async function updateListing(
       landSize: data.landSize,
       landSizeAcres: data.landSizeAcres,
       landPurpose: data.landPurpose,
+      ...categoryFields(data),
       status: data.status || "active",
       bedrooms: data.bedrooms,
       bathrooms: data.bathrooms,

@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { ApiBearerAuth, ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Role, PaymentStatus, PaymentMethod } from "@prisma/client";
 import { IsBoolean } from "class-validator";
 import { Roles } from "../common/decorators/roles.decorator";
@@ -7,10 +8,13 @@ import { PrismaService } from "../prisma/prisma.service";
 import { BillingService } from "../billing/billing.service";
 
 class VerifyBankDto {
+  @ApiProperty({ example: true })
   @IsBoolean()
   approve!: boolean;
 }
 
+@ApiTags("admin")
+@ApiBearerAuth("JWT")
 @Controller("admin")
 @Roles(Role.ADMIN)
 export class AdminController {
@@ -20,6 +24,7 @@ export class AdminController {
   ) {}
 
   @Get("payments/pending")
+  @ApiOperation({ summary: "List pending bank payments" })
   pendingPayments() {
     return this.prisma.payment.findMany({
       where: {
@@ -36,6 +41,7 @@ export class AdminController {
   }
 
   @Post("payments/:id/verify")
+  @ApiOperation({ summary: "Approve or reject a bank payment" })
   verify(
     @CurrentUser() admin: AuthUser,
     @Param("id") id: string,
@@ -45,6 +51,7 @@ export class AdminController {
   }
 
   @Get("users")
+  @ApiOperation({ summary: "List recent users" })
   users() {
     return this.prisma.user.findMany({
       orderBy: { createdAt: "desc" },

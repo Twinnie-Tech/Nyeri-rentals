@@ -1,8 +1,10 @@
 import { Controller, Get } from "@nestjs/common";
+import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Public } from "../common/decorators/public.decorator";
 import { PrismaService } from "../prisma/prisma.service";
 import { RedisService } from "../redis/redis.service";
 
+@ApiTags("health")
 @Controller("health")
 export class HealthController {
   constructor(
@@ -12,6 +14,7 @@ export class HealthController {
 
   @Public()
   @Get()
+  @ApiOperation({ summary: "Health check (DB + Redis)" })
   async check() {
     let db = false;
     let redis = false;
