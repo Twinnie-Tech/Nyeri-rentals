@@ -7,8 +7,9 @@ export const user = defineType({
   fields: [
     defineField({
       name: "clerkId",
-      title: "Clerk ID",
+      title: "User ID",
       type: "string",
+      description: "Legacy field name; stores Nest user id or seed id",
       validation: (Rule) => Rule.required(),
       readOnly: true,
     }),

@@ -6,11 +6,13 @@ export { ACCESS_COOKIE, REFRESH_COOKIE };
 
 export type SessionUser = {
   id: string;
-  phone: string;
+  phone: string | null;
   email: string | null;
   name: string | null;
   roles: string[];
   onboardingComplete: boolean;
+  phoneVerifiedAt?: string | null;
+  emailVerifiedAt?: string | null;
   agent?: {
     id: string;
     onboardingComplete: boolean;
@@ -32,6 +34,12 @@ export async function getRefreshToken() {
   return jar.get(REFRESH_COOKIE)?.value || null;
 }
 
+/**
+ * Session for RSC / server actions.
+ * Access-token refresh with cookie rotation is handled in `proxy.ts`
+ * (and `POST /api/auth/refresh`) so Nest token rotation stays in sync
+ * with httpOnly cookies.
+ */
 export async function getSessionUser(): Promise<SessionUser | null> {
   const access = await getAccessToken();
   if (!access) return null;

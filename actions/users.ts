@@ -38,13 +38,109 @@ export async function updateUserProfile(data: UserProfileData) {
       accessToken,
       body: {
         name: data.name,
-        phone: data.phone || undefined,
-        email: data.email || undefined,
+        // Phone/email are linked via verification endpoints
       },
     });
   } catch (err) {
     const message =
       err instanceof Error ? err.message : "Failed to update profile";
+    throw new Error(message);
+  }
+}
+
+export type PhoneVerificationRequestResult = {
+  ok: boolean;
+  phone: string;
+  expiresIn: number;
+  delivery: "preview" | "sent";
+  channels?: { sms?: boolean; whatsapp?: boolean };
+  devCode?: string;
+};
+
+export type EmailVerificationRequestResult = {
+  ok: boolean;
+  email: string;
+  expiresIn: number;
+  delivery: "preview" | "sent";
+  devCode?: string;
+};
+
+export async function requestPhoneVerification(
+  phone: string,
+): Promise<PhoneVerificationRequestResult> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) throw new Error("Not authenticated");
+
+  try {
+    return await apiFetch<PhoneVerificationRequestResult>(
+      "/users/me/phone/request-verification",
+      {
+        method: "POST",
+        accessToken,
+        body: { phone },
+      },
+    );
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to send verification code";
+    throw new Error(message);
+  }
+}
+
+export async function verifyPhoneLink(phone: string, code: string) {
+  const accessToken = await getAccessToken();
+  if (!accessToken) throw new Error("Not authenticated");
+
+  try {
+    return await apiFetch("/users/me/phone/verify", {
+      method: "POST",
+      accessToken,
+      body: { phone, code },
+    });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to verify phone number";
+    throw new Error(message);
+  }
+}
+
+export async function requestEmailVerification(
+  email: string,
+): Promise<EmailVerificationRequestResult> {
+  const accessToken = await getAccessToken();
+  if (!accessToken) throw new Error("Not authenticated");
+
+  try {
+    return await apiFetch<EmailVerificationRequestResult>(
+      "/users/me/email/request-verification",
+      {
+        method: "POST",
+        accessToken,
+        body: { email },
+      },
+    );
+  } catch (err) {
+    const message =
+      err instanceof Error
+        ? err.message
+        : "Failed to send email verification code";
+    throw new Error(message);
+  }
+}
+
+export async function verifyEmailLink(email: string, code: string) {
+  const accessToken = await getAccessToken();
+  if (!accessToken) throw new Error("Not authenticated");
+
+  try {
+    return await apiFetch("/users/me/email/verify", {
+      method: "POST",
+      accessToken,
+      body: { email, code },
+    });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to verify email";
     throw new Error(message);
   }
 }
@@ -61,11 +157,11 @@ export async function toggleSavedListing(
   const accessToken = await getAccessToken();
   if (!accessToken) throw new Error("Not authenticated");
 
-  const saved = await apiFetch<
-    Array<{ property: { id: string; sanityId: string } }>
-  >("/users/me/saved", { accessToken });
+  const saved = await apiFetch<{
+    items: Array<{ property: { id: string; sanityId: string } }>;
+  }>("/users/me/saved?limit=100", { accessToken });
 
-  const isSaved = saved.some(
+  const isSaved = saved.items.some(
     (s) => s.property.sanityId === propertyId || s.property.id === propertyId,
   );
 
@@ -89,10 +185,10 @@ export async function getUserSavedIds(): Promise<string[]> {
   if (!accessToken) return [];
 
   try {
-    const saved = await apiFetch<
-      Array<{ property: { id: string; sanityId: string } }>
-    >("/users/me/saved", { accessToken });
-    return saved.map((s) => s.property.sanityId || s.property.id);
+    const saved = await apiFetch<{
+      items: Array<{ property: { id: string; sanityId: string } }>;
+    }>("/users/me/saved?limit=100", { accessToken });
+    return saved.items.map((s) => s.property.sanityId || s.property.id);
   } catch {
     return [];
   }

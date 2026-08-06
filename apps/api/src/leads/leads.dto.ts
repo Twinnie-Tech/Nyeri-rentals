@@ -6,6 +6,10 @@ export class CreateLeadDto {
   @IsString()
   propertyId?: string;
 
+  @IsOptional()
+  @IsString()
+  sanityId?: string;
+
   @IsString()
   @MinLength(2)
   name!: string;

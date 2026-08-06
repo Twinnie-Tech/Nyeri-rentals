@@ -3,12 +3,8 @@
 import { redirect } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
 import { getAccessToken, getSessionUser, hasActiveAgentPlan } from "@/lib/api/session";
-import { client } from "@/lib/sanity/client";
 import { sanityFetch } from "@/lib/sanity/live";
-import {
-  AGENT_BY_USER_ID_QUERY,
-  AGENT_ID_BY_USER_QUERY,
-} from "@/lib/sanity/queries";
+import { AGENT_BY_USER_ID_QUERY } from "@/lib/sanity/queries";
 import type { AgentOnboardingData, AgentProfileData } from "@/types";
 
 export async function createAgentDocument() {
@@ -28,26 +24,14 @@ export async function createAgentDocument() {
     sanityId: string | null;
   }>("/agents/ensure", { method: "POST", accessToken });
 
-  const { data: existingSanity } = await sanityFetch({
-    query: AGENT_ID_BY_USER_QUERY,
-    params: { userId: user.id },
-  });
-
-  if (existingSanity) {
-    return existingSanity;
-  }
-
-  const sanityAgent = await client.create({
-    _type: "agent",
+  return {
+    _id: agent.sanityId,
     userId: user.id,
     name: agent.name,
     email: agent.email,
-    phone: agent.phone || "",
-    onboardingComplete: false,
-    createdAt: new Date().toISOString(),
-  });
-
-  return sanityAgent;
+    phone: agent.phone,
+    onboardingComplete: agent.onboardingComplete,
+  };
 }
 
 export async function completeAgentOnboarding(data: AgentOnboardingData) {
@@ -68,24 +52,6 @@ export async function completeAgentOnboarding(data: AgentOnboardingData) {
     },
   });
 
-  const { data: agent } = await sanityFetch({
-    query: AGENT_ID_BY_USER_QUERY,
-    params: { userId: user.id },
-  });
-
-  if (agent) {
-    await client
-      .patch(agent._id)
-      .set({
-        bio: data.bio,
-        phone: data.phone,
-        licenseNumber: data.licenseNumber,
-        agency: data.agency || "",
-        onboardingComplete: true,
-      })
-      .commit();
-  }
-
   redirect("/dashboard");
 }
 
@@ -104,23 +70,6 @@ export async function updateAgentProfile(data: AgentProfileData) {
       agency: data.agency,
     },
   });
-
-  const { data: agent } = await sanityFetch({
-    query: AGENT_ID_BY_USER_QUERY,
-    params: { userId: user.id },
-  });
-
-  if (!agent) throw new Error("Agent not found");
-
-  await client
-    .patch(agent._id)
-    .set({
-      bio: data.bio,
-      phone: data.phone,
-      licenseNumber: data.licenseNumber,
-      agency: data.agency || "",
-    })
-    .commit();
 }
 
 export async function getAgentByUserId(userId: string) {

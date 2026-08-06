@@ -104,6 +104,8 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
+  phoneVerifiedAt?: string | null;
+  emailVerifiedAt?: string | null;
   photo?: SanityImage;
   savedListings?: Property[];
   createdAt?: string;

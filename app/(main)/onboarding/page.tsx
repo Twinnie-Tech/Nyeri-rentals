@@ -20,6 +20,8 @@ export default async function OnboardingPage() {
         defaultName={user.name || ""}
         defaultEmail={user.email || ""}
         defaultPhone={user.phone || ""}
+        phoneVerified={Boolean(user.phoneVerifiedAt && user.phone)}
+        emailVerified={Boolean(user.emailVerifiedAt && user.email)}
       />
     </div>
   );

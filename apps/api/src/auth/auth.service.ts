@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import { Role } from "@prisma/client";
+import { Prisma, Role } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
 import { createHash, randomInt, randomBytes } from "crypto";
 import { PrismaService } from "../prisma/prisma.service";
@@ -154,62 +154,144 @@ export class AuthService {
   private async verifyPhoneOtp(phone: string, name?: string) {
     let user = await this.prisma.user.findUnique({ where: { phone } });
     let isNew = false;
+
     if (!user) {
-      isNew = true;
-      user = await this.prisma.user.create({
-        data: {
-          phone,
-          name,
-          phoneVerifiedAt: new Date(),
-          roles: [Role.USER],
-        },
+      try {
+        user = await this.prisma.user.create({
+          data: {
+            phone,
+            name,
+            phoneVerifiedAt: new Date(),
+            roles: [Role.USER],
+          },
+        });
+        await this.prisma.subscription.create({ data: { userId: user.id } });
+        isNew = true;
+      } catch (err) {
+        // Race: another request created this phone — log into that account
+        user = await this.findExistingAfterUniqueConflict(err, { phone });
+        if (!user) throw err;
+      }
+    }
+
+    if (!isNew) {
+      const markOnboarded = this.shouldMarkOnboarded(user, {
+        phoneVerified: true,
+        name,
       });
-      await this.prisma.subscription.create({ data: { userId: user.id } });
-    } else {
       user = await this.prisma.user.update({
         where: { id: user.id },
         data: {
           phoneVerifiedAt: new Date(),
           ...(name && !user.name ? { name } : {}),
+          ...(markOnboarded ? { onboardingComplete: true } : {}),
         },
       });
     }
+
     if (isNew) {
       this.queueWelcomePhone(phone, user.name);
       if (user.email) {
         this.queueWelcomeEmail(user.email, user.name);
       }
     }
-    return this.issueTokens(user.id, user.phone);
+
+    const tokens = await this.issueTokens(user.id, user.phone);
+    return { ...tokens, isNew };
   }
 
   private async verifyEmailOtp(email: string, name?: string) {
     let user = await this.prisma.user.findUnique({ where: { email } });
     let isNew = false;
+
     if (!user) {
-      isNew = true;
-      user = await this.prisma.user.create({
-        data: {
-          email,
-          name,
-          emailVerifiedAt: new Date(),
-          roles: [Role.USER],
-        },
+      try {
+        user = await this.prisma.user.create({
+          data: {
+            email,
+            name,
+            emailVerifiedAt: new Date(),
+            roles: [Role.USER],
+          },
+        });
+        await this.prisma.subscription.create({ data: { userId: user.id } });
+        isNew = true;
+      } catch (err) {
+        user = await this.findExistingAfterUniqueConflict(err, { email });
+        if (!user) throw err;
+      }
+    }
+
+    if (!isNew) {
+      const markOnboarded = this.shouldMarkOnboarded(user, {
+        emailVerified: true,
+        name,
       });
-      await this.prisma.subscription.create({ data: { userId: user.id } });
-    } else {
       user = await this.prisma.user.update({
         where: { id: user.id },
         data: {
           emailVerifiedAt: new Date(),
           ...(name && !user.name ? { name } : {}),
+          ...(markOnboarded ? { onboardingComplete: true } : {}),
         },
       });
     }
+
     if (isNew) {
       this.queueWelcomeEmail(email, user.name);
     }
-    return this.issueTokens(user.id, user.phone);
+
+    const tokens = await this.issueTokens(user.id, user.phone);
+    return { ...tokens, isNew };
+  }
+
+  /**
+   * Existing account is ready to skip onboarding when both contacts are verified
+   * (the channel being verified counts as verified) and a name is present.
+   */
+  private shouldMarkOnboarded(
+    user: {
+      name: string | null;
+      phone: string | null;
+      email: string | null;
+      phoneVerifiedAt: Date | null;
+      emailVerifiedAt: Date | null;
+      onboardingComplete: boolean;
+    },
+    opts: {
+      phoneVerified?: boolean;
+      emailVerified?: boolean;
+      name?: string;
+    },
+  ) {
+    if (user.onboardingComplete) return true;
+    const hasName = Boolean(user.name?.trim() || opts.name?.trim());
+    const phoneOk = Boolean(
+      user.phone && (user.phoneVerifiedAt || opts.phoneVerified),
+    );
+    const emailOk = Boolean(
+      user.email && (user.emailVerifiedAt || opts.emailVerified),
+    );
+    return hasName && phoneOk && emailOk;
+  }
+
+  private async findExistingAfterUniqueConflict(
+    err: unknown,
+    where: { phone?: string; email?: string },
+  ) {
+    if (
+      !(err instanceof Prisma.PrismaClientKnownRequestError) ||
+      err.code !== "P2002"
+    ) {
+      return null;
+    }
+    if (where.phone) {
+      return this.prisma.user.findUnique({ where: { phone: where.phone } });
+    }
+    if (where.email) {
+      return this.prisma.user.findUnique({ where: { email: where.email } });
+    }
+    return null;
   }
 
   async registerEmail(dto: RegisterEmailDto) {

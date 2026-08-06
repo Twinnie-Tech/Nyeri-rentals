@@ -179,16 +179,26 @@ model PropertyMirror {
   ownerUserId     String?
   title           String
   slug            String?
+  description     String?
   listingCategory ListingCategory
   propertyType    PropertyType
   status          ListingStatus   @default(draft)
   price           Int?
   bedrooms        Int?
   bathrooms       Int?
+  squareFeet      Int?
+  yearBuilt       Int?
+  street          String?
   city            String?
   county          String?
+  zipCode         String?
   latitude        Float?
   longitude       Float?
+  amenities       String[]        @default([])
+  /// Image refs as stored from the listing form: [{ _key, assetRef }]
+  images          Json?
+  /// Category-specific and other listing fields (rent/sale/airbnb/land/villa packs)
+  details         Json?
   publishedAt     DateTime?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt

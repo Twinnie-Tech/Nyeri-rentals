@@ -12,7 +12,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-accent/20">
-      <DashboardSidebar />
+      <DashboardSidebar isAdmin={user.roles?.includes("ADMIN")} />
       <main id="main" className="flex-1 p-8">
         {children}
       </main>

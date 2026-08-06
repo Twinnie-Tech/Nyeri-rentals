@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Role, PaymentStatus, PaymentMethod } from "@prisma/client";
 import { IsBoolean } from "class-validator";
@@ -51,21 +51,38 @@ export class AdminController {
   }
 
   @Get("users")
-  @ApiOperation({ summary: "List recent users" })
-  users() {
-    return this.prisma.user.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 100,
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        email: true,
-        roles: true,
-        onboardingComplete: true,
-        createdAt: true,
-        subscription: true,
-      },
-    });
+  @ApiOperation({ summary: "List recent users (paginated)" })
+  async users(
+    @Query("page") page?: string,
+    @Query("limit") limit?: string,
+  ) {
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 20));
+    const skip = (safePage - 1) * safeLimit;
+    const [items, total] = await Promise.all([
+      this.prisma.user.findMany({
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: safeLimit,
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          email: true,
+          roles: true,
+          onboardingComplete: true,
+          createdAt: true,
+          subscription: true,
+        },
+      }),
+      this.prisma.user.count(),
+    ]);
+    return {
+      items,
+      page: safePage,
+      limit: safeLimit,
+      total,
+      totalPages: Math.ceil(total / safeLimit) || 1,
+    };
   }
 }

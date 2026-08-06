@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { ACCESS_COOKIE } from "@/lib/api/constants";
+import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/api/constants";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -16,6 +16,11 @@ type MeResponse = {
     status: string;
     currentPeriodEnd: string | null;
   } | null;
+};
+
+type TokenPair = {
+  accessToken: string;
+  refreshToken: string;
 };
 
 function isPublicPath(pathname: string) {
@@ -38,6 +43,24 @@ function hasActivePlan(user: MeResponse) {
   return new Date(sub.currentPeriodEnd) > new Date();
 }
 
+function applyAuthCookies(res: NextResponse, tokens: TokenPair) {
+  const isProd = process.env.NODE_ENV === "production";
+  res.cookies.set(ACCESS_COOKIE, tokens.accessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 15,
+  });
+  res.cookies.set(REFRESH_COOKIE, tokens.refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+}
+
 async function fetchMe(accessToken: string): Promise<MeResponse | null> {
   try {
     const res = await fetch(`${API_URL}/auth/me`, {
@@ -51,6 +74,31 @@ async function fetchMe(accessToken: string): Promise<MeResponse | null> {
   }
 }
 
+async function refreshTokens(
+  refreshToken: string,
+): Promise<TokenPair | null> {
+  try {
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as TokenPair;
+    if (!data.accessToken || !data.refreshToken) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function redirectSignIn(req: NextRequest) {
+  const signIn = new URL("/sign-in", req.url);
+  signIn.searchParams.set("redirect_url", req.url);
+  return NextResponse.redirect(signIn);
+}
+
 export default async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -58,18 +106,26 @@ export default async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const access = req.cookies.get(ACCESS_COOKIE)?.value;
-  if (!access) {
-    const signIn = new URL("/sign-in", req.url);
-    signIn.searchParams.set("redirect_url", req.url);
-    return NextResponse.redirect(signIn);
+  let access = req.cookies.get(ACCESS_COOKIE)?.value;
+  const refresh = req.cookies.get(REFRESH_COOKIE)?.value;
+  let rotated: TokenPair | null = null;
+
+  if (!access && !refresh) {
+    return redirectSignIn(req);
   }
 
-  const user = await fetchMe(access);
+  let user = access ? await fetchMe(access) : null;
+
+  if (!user && refresh) {
+    rotated = await refreshTokens(refresh);
+    if (rotated) {
+      access = rotated.accessToken;
+      user = await fetchMe(access);
+    }
+  }
+
   if (!user) {
-    const signIn = new URL("/sign-in", req.url);
-    signIn.searchParams.set("redirect_url", req.url);
-    return NextResponse.redirect(signIn);
+    return redirectSignIn(req);
   }
 
   const isOnboarding = pathname.startsWith("/onboarding");
@@ -78,27 +134,32 @@ export default async function proxy(req: NextRequest) {
     pathname.startsWith("/saved") ||
     pathname.startsWith("/profile");
 
+  let response = NextResponse.next();
+
   if (isProtected && !user.onboardingComplete) {
-    return NextResponse.redirect(new URL("/onboarding", req.url));
-  }
-
-  if (isOnboarding && user.onboardingComplete) {
-    return NextResponse.redirect(new URL("/", req.url));
-  }
-
-  if (pathname.startsWith("/dashboard")) {
+    response = NextResponse.redirect(new URL("/onboarding", req.url));
+  } else if (isOnboarding && user.onboardingComplete) {
+    response = NextResponse.redirect(new URL("/", req.url));
+  } else   if (pathname.startsWith("/dashboard")) {
+    const isAdmin = user.roles?.includes("ADMIN");
     if (!hasActivePlan(user)) {
-      return NextResponse.redirect(new URL("/pricing", req.url));
-    }
-    if (
+      response = NextResponse.redirect(new URL("/pricing", req.url));
+    } else if (
+      !isAdmin &&
       !user.agent?.onboardingComplete &&
       !pathname.startsWith("/dashboard/onboarding")
     ) {
-      return NextResponse.redirect(new URL("/dashboard/onboarding", req.url));
+      response = NextResponse.redirect(
+        new URL("/dashboard/onboarding", req.url),
+      );
     }
   }
 
-  return NextResponse.next();
+  if (rotated) {
+    applyAuthCookies(response, rotated);
+  }
+
+  return response;
 }
 
 export const config = {

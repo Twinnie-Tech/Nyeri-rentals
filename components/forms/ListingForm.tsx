@@ -232,17 +232,17 @@ export function ListingForm({
     landPurpose: undefined,
     furnished: undefined,
     depositAmount: undefined,
-    availableFrom: undefined,
+    availableFrom: "",
     petsAllowed: false,
     titleDeedReady: false,
     serviceCharge: undefined,
     originalPrice: undefined,
-    openHouseDate: undefined,
+    openHouseDate: "",
     maxGuests: undefined,
     minNights: undefined,
     cleaningFee: undefined,
-    checkInTime: undefined,
-    checkOutTime: undefined,
+    checkInTime: "",
+    checkOutTime: "",
     hasPool: false,
     hasStaffQuarters: false,
     hasGarden: false,
@@ -250,7 +250,7 @@ export function ListingForm({
     roadAccess: undefined,
     fenced: false,
     waterSource: undefined,
-    cropsSuitable: undefined,
+    cropsSuitable: "",
     parkingSpaces: undefined,
     status: "active",
     bedrooms: 0,
@@ -280,12 +280,12 @@ export function ListingForm({
       landPurpose: listing?.landPurpose as FormDataOutput["landPurpose"],
       furnished: listing?.furnished as FormDataOutput["furnished"],
       depositAmount: listing?.depositAmount,
-      availableFrom: listing?.availableFrom?.slice(0, 10),
+      availableFrom: listing?.availableFrom?.slice(0, 10) || "",
       petsAllowed: listing?.petsAllowed ?? false,
       titleDeedReady: listing?.titleDeedReady ?? false,
       serviceCharge: listing?.serviceCharge,
       originalPrice: listing?.originalPrice,
-      openHouseDate: listing?.openHouseDate?.slice(0, 16),
+      openHouseDate: listing?.openHouseDate?.slice(0, 16) || "",
       maxGuests: listing?.maxGuests,
       minNights: listing?.minNights,
       cleaningFee: listing?.cleaningFee,
@@ -810,7 +810,12 @@ export function ListingForm({
                           <FormControl>
                             <Input
                               placeholder="e.g. maize, dairy, horticulture"
-                              {...field}
+                              name={field.name}
+                              onBlur={field.onBlur}
+                              ref={field.ref}
+                              disabled={field.disabled}
+                              value={field.value ?? ""}
+                              onChange={field.onChange}
                             />
                           </FormControl>
                           <FormMessage />
@@ -1057,7 +1062,15 @@ export function ListingForm({
                   <FormItem>
                     <FormLabel>Available From</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input
+                        type="date"
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1070,7 +1083,7 @@ export function ListingForm({
                   <FormItem className="flex flex-row items-end gap-3 space-y-0 pb-2">
                     <FormControl>
                       <Checkbox
-                        checked={field.value}
+                        checked={!!field.value}
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
@@ -1117,7 +1130,15 @@ export function ListingForm({
                   <FormItem>
                     <FormLabel>Open House / Viewing</FormLabel>
                     <FormControl>
-                      <Input type="datetime-local" {...field} />
+                      <Input
+                        type="datetime-local"
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1155,7 +1176,7 @@ export function ListingForm({
                     <FormItem className="flex flex-row items-end gap-3 space-y-0 pb-2">
                       <FormControl>
                         <Checkbox
-                          checked={field.value}
+                          checked={!!field.value}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>
@@ -1249,7 +1270,15 @@ export function ListingForm({
                   <FormItem>
                     <FormLabel>Check-in Time</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Input
+                        type="time"
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1262,7 +1291,15 @@ export function ListingForm({
                   <FormItem>
                     <FormLabel>Check-out Time</FormLabel>
                     <FormControl>
-                      <Input type="time" {...field} />
+                      <Input
+                        type="time"
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -1294,7 +1331,7 @@ export function ListingForm({
                     <FormItem className="flex flex-row items-center gap-3 space-y-0">
                       <FormControl>
                         <Checkbox
-                          checked={field.value}
+                          checked={!!field.value}
                           onCheckedChange={field.onChange}
                         />
                       </FormControl>

@@ -43,16 +43,25 @@ Web app: set `NEXT_PUBLIC_API_URL=http://localhost:4000/v1` in `.env.local`.
 | POST | `/auth/otp/request` | public (`channel`: `phone` \| `email`) |
 | POST | `/auth/otp/verify` | public |
 | POST | `/auth/login` | public |
+| POST | `/auth/refresh` | public |
 | GET | `/auth/me` | JWT |
 | POST | `/users/onboarding` | JWT |
 | PATCH | `/users/me` | JWT |
+| GET | `/properties` | public (paginated) |
+| POST | `/properties` | JWT + agent plan (Sanity write + mirror) |
+| POST | `/properties/media/upload` | JWT + agent plan |
 | GET | `/billing/plan` | public |
 | POST | `/billing/mpesa/stk` | JWT |
 | POST | `/billing/mpesa/callback` | public (Daraja) |
 | POST | `/billing/bank` | JWT |
 | GET | `/billing/payments` | JWT |
 | GET | `/admin/payments/pending` | ADMIN |
+| POST | `/admin/payments/:id/verify` | ADMIN |
 | GET | `/health` | public |
+
+Mobile contract: [`../../docs/MOBILE_API.md`](../../docs/MOBILE_API.md)
+
+Sanity **write** token must be set on the API as `SANITY_WRITE_TOKEN` (not in the Next.js or mobile apps).
 
 In development without `MPESA_*` credentials, STK creates a pending payment; complete it with `POST /billing/mpesa/simulate-complete/:paymentId`.
 

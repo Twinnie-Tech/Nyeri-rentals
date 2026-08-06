@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "build": "nest build",
-    "dev": "nest start --watch",
-    "start": "node dist/main",
-    "start:prod": "node dist/main",
+    "dev": "node ../../scripts/with-system-ca.cjs nest start --watch",
+    "start": "node ../../scripts/with-system-ca.cjs node dist/main",
+    "start:prod": "node ../../scripts/with-system-ca.cjs node dist/main",
     "lint": "biome check src",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

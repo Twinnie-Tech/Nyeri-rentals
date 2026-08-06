@@ -15,6 +15,8 @@ export default async function ProfilePage() {
     name: user.name || "",
     email: user.email || "",
     phone: user.phone || "",
+    phoneVerifiedAt: user.phoneVerifiedAt || null,
+    emailVerifiedAt: user.emailVerifiedAt || null,
   };
 
   return (

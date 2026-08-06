@@ -1,4 +1,3 @@
-import { getSessionUser } from "@/lib/api/session";
 import {
   Bath,
   Bed,
@@ -11,6 +10,7 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getSessionUser } from "@/lib/api/session";
 import { DynamicMapView } from "@/components/map/DynamicMapView";
 import { AgentCard } from "@/components/property/AgentCard";
 import { ContactAgentButton } from "@/components/property/ContactAgentButton";
@@ -20,8 +20,34 @@ import { SharePropertyButton } from "@/components/property/SharePropertyButton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatBadge } from "@/components/ui/stat-badge";
+import {
+  FURNISHED_OPTIONS,
+  getLandPurposeLabel,
+  getLandSizeLabel,
+  getListingCategoryLabel,
+  getPriceSuffix,
+  getPropertyTypeLabel,
+  isLandType,
+  ROAD_ACCESS_OPTIONS,
+  WATER_SOURCE_OPTIONS,
+} from "@/lib/property-categories";
 import { sanityFetch } from "@/lib/sanity/live";
 import { PROPERTY_DETAIL_QUERY } from "@/lib/sanity/queries";
+
+function formatKes(price: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "KSH",
+    maximumFractionDigits: 0,
+  }).format(price);
+}
+
+function labelFrom(
+  options: readonly { value: string; label: string }[],
+  value?: string | null,
+) {
+  return options.find((o) => o.value === value)?.label || value || null;
+}
 
 export async function generateMetadata({
   params,
@@ -38,17 +64,11 @@ export async function generateMetadata({
     return { title: "Property Not Found" };
   }
 
-  const price = new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "KSH",
-    maximumFractionDigits: 0,
-  }).format(property.price);
-
   return {
-    title: `${property.title} - ${price}`,
+    title: `${property.title} - ${formatKes(property.price)}`,
     description:
       property.description?.slice(0, 160) ||
-      `Beautiful ${property.propertyType || "property"} with ${property.bedrooms} bedrooms and ${property.bathrooms} bathrooms.`,
+      `${getPropertyTypeLabel(property.propertyType)} ${getListingCategoryLabel(property.listingCategory).toLowerCase()} in Nyeri.`,
   };
 }
 
@@ -70,22 +90,169 @@ export default async function PropertyPage({
     notFound();
   }
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "KSH",
-      maximumFractionDigits: 0,
-    }).format(price);
-  };
-
   const statusLabel =
     property.status !== "active"
       ? property.status.charAt(0).toUpperCase() + property.status.slice(1)
       : null;
 
+  const showBuildingStats = !isLandType(property.propertyType);
+  const priceSuffix = getPriceSuffix(property.listingCategory);
+
+  const detailRows: { label: string; value: string }[] = [];
+
+  if (property.listingCategory === "rent") {
+    if (property.furnished) {
+      detailRows.push({
+        label: "Furnishing",
+        value: labelFrom(FURNISHED_OPTIONS, property.furnished) || "",
+      });
+    }
+    if (property.depositAmount != null) {
+      detailRows.push({
+        label: "Security deposit",
+        value: formatKes(property.depositAmount),
+      });
+    }
+    if (property.availableFrom) {
+      detailRows.push({
+        label: "Available from",
+        value: new Date(property.availableFrom).toLocaleDateString(),
+      });
+    }
+    if (property.petsAllowed != null) {
+      detailRows.push({
+        label: "Pets",
+        value: property.petsAllowed ? "Allowed" : "Not allowed",
+      });
+    }
+  }
+
+  if (property.listingCategory === "sale") {
+    if (property.originalPrice != null) {
+      detailRows.push({
+        label: "Original price",
+        value: formatKes(property.originalPrice),
+      });
+    }
+    if (property.serviceCharge != null) {
+      detailRows.push({
+        label: "Service charge",
+        value: `${formatKes(property.serviceCharge)} / mo`,
+      });
+    }
+    if (property.openHouseDate) {
+      detailRows.push({
+        label: "Open house",
+        value: new Date(property.openHouseDate).toLocaleString(),
+      });
+    }
+    if (property.titleDeedReady != null && !isLandType(property.propertyType)) {
+      detailRows.push({
+        label: "Title deed",
+        value: property.titleDeedReady ? "Ready" : "Pending",
+      });
+    }
+  }
+
+  if (property.listingCategory === "airbnb") {
+    if (property.maxGuests != null) {
+      detailRows.push({ label: "Max guests", value: String(property.maxGuests) });
+    }
+    if (property.minNights != null) {
+      detailRows.push({
+        label: "Minimum nights",
+        value: String(property.minNights),
+      });
+    }
+    if (property.cleaningFee != null) {
+      detailRows.push({
+        label: "Cleaning fee",
+        value: formatKes(property.cleaningFee),
+      });
+    }
+    if (property.checkInTime) {
+      detailRows.push({ label: "Check-in", value: property.checkInTime });
+    }
+    if (property.checkOutTime) {
+      detailRows.push({ label: "Check-out", value: property.checkOutTime });
+    }
+  }
+
+  if (property.propertyType === "villa") {
+    const villaFlags = [
+      property.hasPool && "Swimming pool",
+      property.hasStaffQuarters && "Staff quarters",
+      property.hasGarden && "Private garden",
+      property.hasBackupPower && "Backup power",
+    ].filter(Boolean) as string[];
+    if (villaFlags.length) {
+      detailRows.push({ label: "Villa features", value: villaFlags.join(", ") });
+    }
+  }
+
+  if (isLandType(property.propertyType)) {
+    if (property.landSize) {
+      detailRows.push({
+        label: "Land size",
+        value: getLandSizeLabel(property.landSize),
+      });
+    }
+    if (property.landSizeAcres != null) {
+      detailRows.push({
+        label: "Acres",
+        value: String(property.landSizeAcres),
+      });
+    }
+    if (property.landPurpose) {
+      detailRows.push({
+        label: "Purpose",
+        value: getLandPurposeLabel(property.landPurpose),
+      });
+    }
+    if (property.roadAccess) {
+      detailRows.push({
+        label: "Road access",
+        value: labelFrom(ROAD_ACCESS_OPTIONS, property.roadAccess) || "",
+      });
+    }
+    if (property.fenced != null) {
+      detailRows.push({
+        label: "Fenced",
+        value: property.fenced ? "Yes" : "No",
+      });
+    }
+    if (property.titleDeedReady != null) {
+      detailRows.push({
+        label: "Title deed",
+        value: property.titleDeedReady ? "Ready" : "Pending",
+      });
+    }
+  }
+
+  if (property.propertyType === "farmland") {
+    if (property.waterSource) {
+      detailRows.push({
+        label: "Water source",
+        value: labelFrom(WATER_SOURCE_OPTIONS, property.waterSource) || "",
+      });
+    }
+    if (property.cropsSuitable) {
+      detailRows.push({
+        label: "Crops / use",
+        value: property.cropsSuitable,
+      });
+    }
+  }
+
+  if (property.parkingSpaces != null && showBuildingStats) {
+    detailRows.push({
+      label: "Parking spaces",
+      value: String(property.parkingSpaces),
+    });
+  }
+
   return (
     <div className="min-h-screen bg-accent/20">
-      {/* Breadcrumb */}
       <div className="bg-background border-b border-border/50">
         <div className="container py-4">
           <nav
@@ -112,21 +279,23 @@ export default async function PropertyPage({
 
       <div className="container py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Image Gallery */}
             <ImageGallery
               images={property.images || []}
               title={property.title}
             />
 
-            {/* Property Header */}
             <div className="bg-background rounded-2xl border border-border/50 p-6 shadow-warm">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                 <div>
                   <div className="flex items-center gap-3 mb-2">
                     <h1 className="text-3xl md:text-4xl font-bold font-heading tabular-nums">
-                      {formatPrice(property.price)}
+                      {formatKes(property.price)}
+                      {priceSuffix ? (
+                        <span className="text-lg font-normal text-muted-foreground">
+                          {priceSuffix}
+                        </span>
+                      ) : null}
                     </h1>
                     {statusLabel && (
                       <Badge
@@ -146,7 +315,7 @@ export default async function PropertyPage({
                   {userId && <SavePropertyButton propertyId={property._id} />}
                   <SharePropertyButton
                     title={property.title}
-                    price={formatPrice(property.price)}
+                    price={formatKes(property.price)}
                   />
                 </div>
               </div>
@@ -159,52 +328,79 @@ export default async function PropertyPage({
                   />
                   <span>
                     {property.address.street}, {property.address.city},{" "}
-                    {property.address.state}&nbsp;{property.address.zipCode}
+                    {property.address.state}
+                    {property.address.zipCode
+                      ? ` ${property.address.zipCode}`
+                      : ""}
                   </span>
                 </div>
               )}
 
-              {/* Property Type Badge */}
-              {property.propertyType && (
-                <div className="mt-4">
-                  <Badge variant="secondary" className="capitalize">
-                    {property.propertyType}
+              <div className="mt-4 flex flex-wrap gap-2">
+                {property.listingCategory && (
+                  <Badge variant="outline">
+                    {getListingCategoryLabel(property.listingCategory)}
                   </Badge>
-                </div>
-              )}
+                )}
+                {property.propertyType && (
+                  <Badge variant="secondary">
+                    {getPropertyTypeLabel(property.propertyType)}
+                  </Badge>
+                )}
+              </div>
             </div>
 
-            {/* Property Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatBadge
-                icon={Bed}
-                value={property.bedrooms}
-                label="Bedrooms"
-                color="primary"
-              />
-              <StatBadge
-                icon={Bath}
-                value={property.bathrooms}
-                label="Bathrooms"
-                color="secondary"
-              />
-              <StatBadge
-                icon={Square}
-                value={property.squareFeet || 0}
-                label="Sq Ft"
-                color="primary"
-              />
-              {property.yearBuilt && (
+            {showBuildingStats && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatBadge
-                  icon={Calendar}
-                  value={property.yearBuilt}
-                  label="Year Built"
+                  icon={Bed}
+                  value={property.bedrooms}
+                  label="Bedrooms"
+                  color="primary"
+                />
+                <StatBadge
+                  icon={Bath}
+                  value={property.bathrooms}
+                  label="Bathrooms"
                   color="secondary"
                 />
-              )}
-            </div>
+                <StatBadge
+                  icon={Square}
+                  value={property.squareFeet || 0}
+                  label="Sq Ft"
+                  color="primary"
+                />
+                {property.yearBuilt && (
+                  <StatBadge
+                    icon={Calendar}
+                    value={property.yearBuilt}
+                    label="Year Built"
+                    color="secondary"
+                  />
+                )}
+              </div>
+            )}
 
-            {/* Description */}
+            {detailRows.length > 0 && (
+              <Card className="shadow-warm">
+                <CardHeader>
+                  <CardTitle className="font-heading">Listing details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {detailRows.map((row) => (
+                      <div key={row.label}>
+                        <dt className="text-sm text-muted-foreground">
+                          {row.label}
+                        </dt>
+                        <dd className="font-medium mt-0.5">{row.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </CardContent>
+              </Card>
+            )}
+
             {property.description && (
               <Card className="shadow-warm">
                 <CardHeader>
@@ -220,7 +416,6 @@ export default async function PropertyPage({
               </Card>
             )}
 
-            {/* Amenities */}
             {property.amenities && property.amenities.length > 0 && (
               <Card className="shadow-warm">
                 <CardHeader>
@@ -251,7 +446,6 @@ export default async function PropertyPage({
               </Card>
             )}
 
-            {/* Map */}
             {property.location && (
               <Card className="shadow-warm overflow-hidden">
                 <CardHeader>
@@ -263,7 +457,7 @@ export default async function PropertyPage({
                       properties={[
                         {
                           ...property,
-                          slug: property.slug?.current || id,
+                          slug: property.slug || id,
                         },
                       ]}
                     />
@@ -273,7 +467,6 @@ export default async function PropertyPage({
             )}
           </div>
 
-          {/* Sidebar - Agent Card */}
           <div className="lg:col-span-1">
             <div className="sticky top-24">
               {property.agent && (

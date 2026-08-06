@@ -18,10 +18,10 @@ export default async function SavedListingsPage() {
 
   if (accessToken) {
     try {
-      const saved = await apiFetch<
-        Array<{ property: { sanityId: string } }>
-      >("/users/me/saved", { accessToken });
-      const ids = saved.map((s) => s.property.sanityId).filter(Boolean);
+      const saved = await apiFetch<{
+        items: Array<{ property: { sanityId: string } }>;
+      }>("/users/me/saved?limit=100", { accessToken });
+      const ids = saved.items.map((s) => s.property.sanityId).filter(Boolean);
       if (ids.length) {
         const { data } = await sanityFetch({
           query: PROPERTIES_BY_IDS_QUERY,

@@ -109,7 +109,20 @@ export function PhoneOtpSignIn() {
         );
         return;
       }
-      router.push(redirectTo.startsWith("http") ? "/" : redirectTo);
+
+      const onboarded = Boolean(data.user?.onboardingComplete);
+      const requested =
+        redirectTo.startsWith("http") || !redirectTo.startsWith("/")
+          ? "/"
+          : redirectTo;
+      // Existing accounts with completed setup go straight in — never re-onboard
+      const dest = onboarded
+        ? requested === "/onboarding"
+          ? "/"
+          : requested
+        : "/onboarding";
+
+      router.push(dest);
       router.refresh();
     });
   }

@@ -5,7 +5,15 @@ import { setAuthCookies } from "@/lib/api/cookies";
 type AuthResponse = {
   accessToken: string;
   refreshToken: string;
-  user: unknown;
+  user: {
+    id: string;
+    phone: string | null;
+    email: string | null;
+    name: string | null;
+    roles: string[];
+    onboardingComplete: boolean;
+  } | null;
+  isNew?: boolean;
 };
 
 export async function POST(req: Request) {
@@ -15,7 +23,10 @@ export async function POST(req: Request) {
       method: "POST",
       body,
     });
-    const res = NextResponse.json({ user: data.user });
+    const res = NextResponse.json({
+      user: data.user,
+      isNew: data.isNew ?? false,
+    });
     setAuthCookies(res, data);
     return res;
   } catch (err) {
