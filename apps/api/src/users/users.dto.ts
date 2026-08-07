@@ -1,5 +1,11 @@
-import { IsEmail, IsOptional, IsString, Length, MinLength } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  Length,
+  MinLength,
+} from "class-validator";
 
 export class CompleteOnboardingDto {
   @ApiProperty({ example: "Jane Doe" })

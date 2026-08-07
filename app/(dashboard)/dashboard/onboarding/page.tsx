@@ -1,7 +1,7 @@
-import { getSessionUser } from "@/lib/api/session";
 import { redirect } from "next/navigation";
 import { createAgentDocument } from "@/actions/agents";
 import { AgentOnboardingForm } from "@/components/forms/AgentOnboardingForm";
+import { getSessionUser } from "@/lib/api/session";
 import { sanityFetch } from "@/lib/sanity/live";
 import { AGENT_ONBOARDING_CHECK_QUERY } from "@/lib/sanity/queries";
 

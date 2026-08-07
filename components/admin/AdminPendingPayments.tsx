@@ -72,9 +72,7 @@ export function AdminPendingPayments({
 
   if (payments.length === 0) {
     return (
-      <p className="text-muted-foreground text-sm">
-        No pending bank payments.
-      </p>
+      <p className="text-muted-foreground text-sm">No pending bank payments.</p>
     );
   }
 

@@ -28,10 +28,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  type InvoicePayment,
   invoiceNumber,
   invoiceStatusLabel,
   invoiceTypeLabel,
-  type InvoicePayment,
 } from "@/lib/billing/invoices";
 import { cn } from "@/lib/utils";
 
@@ -91,7 +91,9 @@ function downloadCsv(rows: InvoicePayment[]) {
       invoiceNumber(p),
       formatDate(p.createdAt),
       p.amountKes,
-      formatDate(p.verifiedAt || (p.status === "COMPLETED" ? p.updatedAt : null)),
+      formatDate(
+        p.verifiedAt || (p.status === "COMPLETED" ? p.updatedAt : null),
+      ),
       invoiceStatusLabel(p.status),
       p.method,
       p.planCode,
@@ -236,9 +238,7 @@ export function InvoicesTable({ initialPayments }: InvoicesTableProps) {
           </div>
           <Select
             value={typeFilter}
-            onValueChange={(v) =>
-              setTypeFilter(v as "all" | "MPESA" | "BANK")
-            }
+            onValueChange={(v) => setTypeFilter(v as "all" | "MPESA" | "BANK")}
           >
             <SelectTrigger className="w-[150px] h-9">
               <SelectValue placeholder="All types" />
@@ -410,7 +410,9 @@ export function InvoicesTable({ initialPayments }: InvoicesTableProps) {
         >
           <div
             className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-warm-md"
+            role="document"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
           >
             <h2
               id="invoice-detail-title"

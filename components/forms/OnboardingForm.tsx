@@ -237,7 +237,9 @@ export function OnboardingForm({
               </h2>
               <p className="text-sm text-muted-foreground">
                 Enter the code sent to{" "}
-                <span className="font-medium text-foreground">{destination}</span>
+                <span className="font-medium text-foreground">
+                  {destination}
+                </span>
                 {isPhone && phoneChannels?.whatsapp
                   ? " via SMS and WhatsApp"
                   : isPhone

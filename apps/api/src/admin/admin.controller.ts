@@ -1,11 +1,19 @@
 import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
-import { Role, PaymentStatus, PaymentMethod } from "@prisma/client";
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiProperty,
+  ApiTags,
+} from "@nestjs/swagger";
+import { PaymentMethod, PaymentStatus, Role } from "@prisma/client";
 import { IsBoolean } from "class-validator";
+import type { BillingService } from "../billing/billing.service";
+import {
+  type AuthUser,
+  CurrentUser,
+} from "../common/decorators/current-user.decorator";
 import { Roles } from "../common/decorators/roles.decorator";
-import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
-import { PrismaService } from "../prisma/prisma.service";
-import { BillingService } from "../billing/billing.service";
+import type { PrismaService } from "../prisma/prisma.service";
 
 class VerifyBankDto {
   @ApiProperty({ example: true })
@@ -52,10 +60,7 @@ export class AdminController {
 
   @Get("users")
   @ApiOperation({ summary: "List recent users (paginated)" })
-  async users(
-    @Query("page") page?: string,
-    @Query("limit") limit?: string,
-  ) {
+  async users(@Query("page") page?: string, @Query("limit") limit?: string) {
     const safePage = Math.max(1, Number(page) || 1);
     const safeLimit = Math.min(100, Math.max(1, Number(limit) || 20));
     const skip = (safePage - 1) * safeLimit;

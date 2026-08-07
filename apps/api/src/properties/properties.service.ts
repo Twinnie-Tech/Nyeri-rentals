@@ -3,10 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { ListingStatus, Prisma } from "@prisma/client";
-import { PrismaService } from "../prisma/prisma.service";
-import { SanityService } from "../sanity/sanity.service";
-import {
+import { ListingStatus, type Prisma } from "@prisma/client";
+import type { PrismaService } from "../prisma/prisma.service";
+import type { SanityService } from "../sanity/sanity.service";
+import type {
   CreatePropertyDto,
   PropertyQueryDto,
   UpdatePropertyDto,
@@ -83,7 +83,9 @@ export class PropertiesService {
   async getByIdOrSanity(id: string) {
     const property =
       (await this.prisma.propertyMirror.findUnique({ where: { id } })) ||
-      (await this.prisma.propertyMirror.findUnique({ where: { sanityId: id } }));
+      (await this.prisma.propertyMirror.findUnique({
+        where: { sanityId: id },
+      }));
     if (!property) throw new NotFoundException("Property not found");
     return property;
   }
@@ -336,9 +338,7 @@ export class PropertiesService {
       },
       update: {
         ...mirrorData,
-        ...(status === ListingStatus.active
-          ? { publishedAt: new Date() }
-          : {}),
+        ...(status === ListingStatus.active ? { publishedAt: new Date() } : {}),
       },
     });
 
@@ -352,8 +352,7 @@ export class PropertiesService {
     const agent = await this.prisma.agent.findUnique({ where: { userId } });
     if (
       mirror &&
-      (mirror.ownerUserId === userId ||
-        (agent && mirror.agentId === agent.id))
+      (mirror.ownerUserId === userId || (agent && mirror.agentId === agent.id))
     ) {
       return { mirror, agent };
     }
@@ -398,11 +397,7 @@ export class PropertiesService {
     return { id: sanityId, mirror };
   }
 
-  async updateStatus(
-    userId: string,
-    sanityId: string,
-    status: ListingStatus,
-  ) {
+  async updateStatus(userId: string, sanityId: string, status: ListingStatus) {
     await this.assertOwnsSanityListing(userId, sanityId);
     await this.sanity.patchDocument(sanityId, {
       status,

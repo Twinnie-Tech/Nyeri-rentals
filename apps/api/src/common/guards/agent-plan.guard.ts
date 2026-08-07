@@ -1,11 +1,11 @@
 import {
-  CanActivate,
-  ExecutionContext,
+  type CanActivate,
+  type ExecutionContext,
   ForbiddenException,
   Injectable,
 } from "@nestjs/common";
 import { SubscriptionStatus } from "@prisma/client";
-import { PrismaService } from "../../prisma/prisma.service";
+import type { PrismaService } from "../../prisma/prisma.service";
 
 /** Requires USER to have an ACTIVE agent subscription (or ADMIN role). */
 @Injectable()

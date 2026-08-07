@@ -1,6 +1,14 @@
 "use client";
 
-import { Heart, Home, LayoutDashboard, LogOut, Menu, User, X } from "lucide-react";
+import {
+  Heart,
+  Home,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  User,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -57,7 +65,7 @@ export function Navbar() {
     return () => {
       cancelled = true;
     };
-  }, [pathname]);
+  }, []);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -262,12 +270,18 @@ export function Navbar() {
                       <div className="h-px bg-border my-2" />
                       <div className="flex flex-col gap-2 px-4 mt-2">
                         <Button variant="outline" className="w-full" asChild>
-                          <Link href="/sign-in" onClick={() => setIsOpen(false)}>
+                          <Link
+                            href="/sign-in"
+                            onClick={() => setIsOpen(false)}
+                          >
                             Sign In
                           </Link>
                         </Button>
                         <Button className="w-full" asChild>
-                          <Link href="/sign-in" onClick={() => setIsOpen(false)}>
+                          <Link
+                            href="/sign-in"
+                            onClick={() => setIsOpen(false)}
+                          >
                             Get Started
                           </Link>
                         </Button>

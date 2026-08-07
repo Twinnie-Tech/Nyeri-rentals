@@ -1,7 +1,7 @@
-import { getSessionUser } from "@/lib/api/session";
 import { redirect } from "next/navigation";
 import { AgentProfileForm } from "@/components/forms/AgentProfileForm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSessionUser } from "@/lib/api/session";
 import { sanityFetch } from "@/lib/sanity/live";
 import { AGENT_PROFILE_QUERY } from "@/lib/sanity/queries";
 

@@ -38,7 +38,12 @@ interface ListingFormDataWithImages {
     | "villa"
     | "land"
     | "farmland";
-  landSize?: "quarter_acre" | "half_acre" | "one_acre" | "multi_acre" | "custom";
+  landSize?:
+    | "quarter_acre"
+    | "half_acre"
+    | "one_acre"
+    | "multi_acre"
+    | "custom";
   landSizeAcres?: number;
   landPurpose?: "residential" | "commercial" | "agricultural";
   furnished?: "unfurnished" | "semi_furnished" | "furnished";

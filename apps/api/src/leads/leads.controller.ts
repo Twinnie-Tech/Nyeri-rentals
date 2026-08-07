@@ -1,10 +1,22 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { LeadsService } from "./leads.service";
-import { CreateLeadDto, UpdateLeadStatusDto } from "./leads.dto";
+import {
+  type AuthUser,
+  CurrentUser,
+} from "../common/decorators/current-user.decorator";
 import { Public } from "../common/decorators/public.decorator";
-import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
 import { AgentPlanGuard } from "../common/guards/agent-plan.guard";
+import type { CreateLeadDto, UpdateLeadStatusDto } from "./leads.dto";
+import type { LeadsService } from "./leads.service";
 
 @ApiTags("leads")
 @Controller("leads")

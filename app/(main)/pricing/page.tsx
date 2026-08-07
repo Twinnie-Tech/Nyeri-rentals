@@ -43,8 +43,8 @@ export default function PricingPage() {
             </h1>
             <p className="text-lg text-muted-foreground text-pretty mb-8">
               Publish listings with photos, amenities, and map pins — then
-              respond to leads from people ready to view or rent. Pay with M-Pesa
-              or bank transfer.
+              respond to leads from people ready to view or rent. Pay with
+              M-Pesa or bank transfer.
             </p>
             <Button asChild size="lg">
               <Link href="#subscribe">See plans</Link>

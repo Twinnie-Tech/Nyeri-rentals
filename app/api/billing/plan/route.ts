@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { apiFetch } from "@/lib/api/client";
-import { getAccessToken } from "@/lib/api/session";
 
 export async function GET() {
   try {

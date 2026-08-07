@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Param, Post } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { BillingService } from "./billing.service";
-import { BankTransferDto, StkPushDto } from "./billing.dto";
+import {
+  type AuthUser,
+  CurrentUser,
+} from "../common/decorators/current-user.decorator";
 import { Public } from "../common/decorators/public.decorator";
-import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
+import type { BankTransferDto, StkPushDto } from "./billing.dto";
+import type { BillingService } from "./billing.service";
 
 @ApiTags("billing")
 @Controller("billing")

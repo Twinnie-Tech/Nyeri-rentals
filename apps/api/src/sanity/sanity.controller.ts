@@ -1,7 +1,7 @@
 import { Controller, Get } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import { SanityService } from "./sanity.service";
 import { Public } from "../common/decorators/public.decorator";
+import type { SanityService } from "./sanity.service";
 
 @ApiTags("sanity")
 @Controller("sanity")

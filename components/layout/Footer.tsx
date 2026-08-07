@@ -166,10 +166,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/dashboard/leads"
-                  className="hover:text-background"
-                >
+                <Link href="/dashboard/leads" className="hover:text-background">
                   Lead inbox
                 </Link>
               </li>

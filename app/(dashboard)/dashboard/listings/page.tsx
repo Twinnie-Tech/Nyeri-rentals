@@ -1,8 +1,7 @@
-import { getSessionUser } from "@/lib/api/session";
-import { redirect } from "next/navigation";
 import { MoreHorizontal, Pencil, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { DeleteListingButton } from "@/components/dashboard/DeleteListingButton";
 import { ListingStatusSelect } from "@/components/dashboard/ListingStatusSelect";
 import { Button } from "@/components/ui/button";
@@ -23,17 +22,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getSessionUser } from "@/lib/api/session";
+import {
+  getListingCategoryLabel,
+  getPropertyTypeLabel,
+  isLandType,
+} from "@/lib/property-categories";
 import { urlFor } from "@/lib/sanity/image";
 import { sanityFetch } from "@/lib/sanity/live";
 import {
   AGENT_ID_BY_USER_QUERY,
   AGENT_LISTINGS_QUERY,
 } from "@/lib/sanity/queries";
-import {
-  getListingCategoryLabel,
-  getPropertyTypeLabel,
-  isLandType,
-} from "@/lib/property-categories";
 import type { Property } from "@/types";
 
 export default async function ListingsPage() {

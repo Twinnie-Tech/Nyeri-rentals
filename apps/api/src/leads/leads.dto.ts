@@ -1,5 +1,5 @@
-import { IsEnum, IsOptional, IsString, MinLength } from "class-validator";
 import { LeadStatus } from "@prisma/client";
+import { IsEnum, IsOptional, IsString, MinLength } from "class-validator";
 
 export class CreateLeadDto {
   @IsOptional()

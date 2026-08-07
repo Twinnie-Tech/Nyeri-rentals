@@ -68,7 +68,9 @@ export function PropertyCard({
             />
           ) : (
             <div className="w-full h-full bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground text-sm">No photo yet</span>
+              <span className="text-muted-foreground text-sm">
+                No photo yet
+              </span>
             </div>
           )}
 

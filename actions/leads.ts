@@ -43,7 +43,10 @@ export async function createLead(
     const message =
       error instanceof Error ? error.message : "Failed to create lead";
     if (message.toLowerCase().includes("already")) {
-      return { success: true, message: "You have already contacted this agent." };
+      return {
+        success: true,
+        message: "You have already contacted this agent.",
+      };
     }
     throw error;
   }

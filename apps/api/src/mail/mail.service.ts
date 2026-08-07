@@ -3,15 +3,15 @@ import {
   Logger,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import nodemailer, { type Transporter } from "nodemailer";
-import { buildOtpEmail } from "./otp-email.template";
-import { buildWelcomeEmail } from "./welcome-email.template";
 import type {
   MailProviderName,
   SendMailInput,
   SendMailResult,
 } from "./mail.types";
+import { buildOtpEmail } from "./otp-email.template";
+import { buildWelcomeEmail } from "./welcome-email.template";
 
 const PROVIDERS: MailProviderName[] = [
   "console",
@@ -37,7 +37,9 @@ export class MailService {
     if (PROVIDERS.includes(raw as MailProviderName)) {
       return raw as MailProviderName;
     }
-    this.logger.warn(`Unknown EMAIL_PROVIDER="${raw}", falling back to console`);
+    this.logger.warn(
+      `Unknown EMAIL_PROVIDER="${raw}", falling back to console`,
+    );
     return "console";
   }
 
@@ -160,7 +162,8 @@ export class MailService {
       pass,
       secure: false,
       // Mailtrap Testing + local AV SSL inspection often need this
-      tlsRejectUnauthorized: mode === "sending" ? this.smtpTlsRejectUnauthorized() : false,
+      tlsRejectUnauthorized:
+        mode === "sending" ? this.smtpTlsRejectUnauthorized() : false,
     });
 
     const from = this.fromHeader();

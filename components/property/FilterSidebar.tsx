@@ -19,13 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Amenity } from "@/types";
 import {
   LAND_PURPOSES,
   LAND_SIZES,
   LISTING_CATEGORIES,
   PROPERTY_TYPES,
 } from "@/lib/property-categories";
+import type { Amenity } from "@/types";
 
 const PROPERTY_TYPE_OPTIONS = [
   { value: "all", label: "All Types" },
@@ -42,10 +42,7 @@ const LAND_PURPOSE_OPTIONS = [
   ...LAND_PURPOSES,
 ];
 
-const LAND_SIZE_OPTIONS = [
-  { value: "all", label: "Any size" },
-  ...LAND_SIZES,
-];
+const LAND_SIZE_OPTIONS = [{ value: "all", label: "Any size" }, ...LAND_SIZES];
 
 const BEDROOM_OPTIONS = [
   { value: "0", label: "Any" },

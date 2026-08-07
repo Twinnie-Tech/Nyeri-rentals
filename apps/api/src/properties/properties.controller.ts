@@ -20,18 +20,21 @@ import {
   ApiOperation,
   ApiTags,
 } from "@nestjs/swagger";
-import { PropertiesService } from "./properties.service";
 import {
+  type AuthUser,
+  CurrentUser,
+} from "../common/decorators/current-user.decorator";
+import { Public } from "../common/decorators/public.decorator";
+import { AgentPlanGuard } from "../common/guards/agent-plan.guard";
+import type { SanityService } from "../sanity/sanity.service";
+import type {
   CreatePropertyDto,
   PropertyQueryDto,
   UpdatePropertyDto,
   UpdatePropertyStatusDto,
   UpsertPropertyMirrorDto,
 } from "./properties.dto";
-import { Public } from "../common/decorators/public.decorator";
-import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
-import { AgentPlanGuard } from "../common/guards/agent-plan.guard";
-import { SanityService } from "../sanity/sanity.service";
+import type { PropertiesService } from "./properties.service";
 
 @ApiTags("properties")
 @Controller("properties")
@@ -100,10 +103,7 @@ export class PropertiesController {
   @ApiBearerAuth("JWT")
   @UseGuards(AgentPlanGuard)
   @ApiOperation({ summary: "Delete listing from Sanity + mirror" })
-  remove(
-    @CurrentUser() user: AuthUser,
-    @Param("sanityId") sanityId: string,
-  ) {
+  remove(@CurrentUser() user: AuthUser, @Param("sanityId") sanityId: string) {
     return this.properties.deleteListing(user.id, sanityId);
   }
 
@@ -111,10 +111,7 @@ export class PropertiesController {
   @ApiBearerAuth("JWT")
   @UseGuards(AgentPlanGuard)
   @ApiOperation({ summary: "Upsert property mirror from Sanity id" })
-  upsert(
-    @CurrentUser() user: AuthUser,
-    @Body() dto: UpsertPropertyMirrorDto,
-  ) {
+  upsert(@CurrentUser() user: AuthUser, @Body() dto: UpsertPropertyMirrorDto) {
     return this.properties.upsertMirror(user.id, dto);
   }
 
@@ -143,11 +140,7 @@ export class PropertiesController {
   @ApiOperation({ summary: "Upload listing image to Sanity assets" })
   async upload(
     @UploadedFile()
-    file?: {
-      buffer: Buffer;
-      originalname?: string;
-      mimetype?: string;
-    },
+    file?: { buffer: Buffer; originalname?: string; mimetype?: string },
   ) {
     if (!file?.buffer) {
       return { message: "No file provided" };

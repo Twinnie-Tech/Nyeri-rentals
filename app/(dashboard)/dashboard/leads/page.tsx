@@ -1,7 +1,6 @@
-import { getSessionUser } from "@/lib/api/session";
-import { redirect } from "next/navigation";
 import { ExternalLink, MessageSquare } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { LeadStatusSelect } from "@/components/dashboard/LeadStatusSelect";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -13,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getSessionUser } from "@/lib/api/session";
 import { sanityFetch } from "@/lib/sanity/live";
 import {
   AGENT_ID_BY_USER_QUERY,

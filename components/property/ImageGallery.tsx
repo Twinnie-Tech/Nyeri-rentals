@@ -165,7 +165,8 @@ export function ImageGallery({ images, title }: ImageGalleryProps) {
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent className="max-w-6xl p-0 bg-black/95 border-none overscroll-contain">
           <DialogTitle className="sr-only">
-            Image gallery: {title} — image {selectedIndex + 1} of {images.length}
+            Image gallery: {title} — image {selectedIndex + 1} of{" "}
+            {images.length}
           </DialogTitle>
           <section
             className="relative aspect-[16/9]"

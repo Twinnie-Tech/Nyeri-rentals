@@ -3,7 +3,7 @@ import {
   Logger,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import { buildOtpSms, buildWelcomeSms } from "./message.templates";
 import type {
   PhoneDeliveryResult,
@@ -169,14 +169,11 @@ export class MessagingService {
     }
 
     const sms = smsResult.sms;
-    const previewOnly =
-      sms.previewOnly && (!whatsapp || whatsapp.previewOnly);
+    const previewOnly = sms.previewOnly && (!whatsapp || whatsapp.previewOnly);
 
     this.logger.log(
       `OTP to ${phone}: sms=${sms.provider}` +
-        (whatsapp
-          ? ` whatsapp=${whatsapp.provider}`
-          : " whatsapp=off"),
+        (whatsapp ? ` whatsapp=${whatsapp.provider}` : " whatsapp=off"),
     );
 
     return { sms, whatsapp, previewOnly };
@@ -350,9 +347,7 @@ export class MessagingService {
       data = raw ? (JSON.parse(raw) as typeof data) : {};
     } catch {
       // AT often returns plain text on auth errors, e.g. "The supplied authentication is invalid"
-      throw new Error(
-        raw.trim() || `Africa's Talking SMS error ${res.status}`,
-      );
+      throw new Error(raw.trim() || `Africa's Talking SMS error ${res.status}`);
     }
 
     if (!res.ok) {
@@ -534,10 +529,7 @@ export class MessagingService {
 
     if (contentSid && meta.kind === "otp" && meta.code) {
       params.set("ContentSid", contentSid);
-      params.set(
-        "ContentVariables",
-        JSON.stringify({ "1": meta.code }),
-      );
+      params.set("ContentVariables", JSON.stringify({ "1": meta.code }));
     } else if (contentSid) {
       params.set("ContentSid", contentSid);
     } else {
@@ -592,8 +584,7 @@ export class MessagingService {
       this.config.get<string>("META_WHATSAPP_OTP_TEMPLATE") || "otp_verify";
     const welcomeTemplate =
       this.config.get<string>("META_WHATSAPP_WELCOME_TEMPLATE") || "welcome";
-    const lang =
-      this.config.get<string>("META_WHATSAPP_TEMPLATE_LANG") || "en";
+    const lang = this.config.get<string>("META_WHATSAPP_TEMPLATE_LANG") || "en";
 
     let payload: Record<string, unknown>;
 
@@ -710,7 +701,9 @@ export class MessagingService {
 
     const toMsisdn = this.infobipMsisdn(to);
     const fromMsisdn = this.infobipMsisdn(from);
-    const otpTemplate = this.config.get<string>("INFOBIP_WHATSAPP_OTP_TEMPLATE");
+    const otpTemplate = this.config.get<string>(
+      "INFOBIP_WHATSAPP_OTP_TEMPLATE",
+    );
     const welcomeTemplate = this.config.get<string>(
       "INFOBIP_WHATSAPP_WELCOME_TEMPLATE",
     );
@@ -738,25 +731,30 @@ export class MessagingService {
     }
 
     // Free-form text — trial / 24h session window after user messages the sender
-    const res = await fetch(`${this.infobipBaseUrl()}/whatsapp/1/message/text`, {
-      method: "POST",
-      headers: {
-        Authorization: `App ${apiKey}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const res = await fetch(
+      `${this.infobipBaseUrl()}/whatsapp/1/message/text`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `App ${apiKey}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          from: fromMsisdn,
+          to: toMsisdn,
+          content: { text },
+        }),
       },
-      body: JSON.stringify({
-        from: fromMsisdn,
-        to: toMsisdn,
-        content: { text },
-      }),
-    });
+    );
 
     const raw = await res.text();
     let data: {
       messageId?: string;
       to?: string;
-      requestError?: { serviceException?: { text?: string; messageId?: string } };
+      requestError?: {
+        serviceException?: { text?: string; messageId?: string };
+      };
     } = {};
     try {
       data = raw ? (JSON.parse(raw) as typeof data) : {};
@@ -794,9 +792,7 @@ export class MessagingService {
     language: string;
   }): Promise<SendMessageResult> {
     const placeholders =
-      opts.kind === "otp" && opts.code
-        ? [opts.code]
-        : [this.brandName()];
+      opts.kind === "otp" && opts.code ? [opts.code] : [this.brandName()];
 
     const content: Record<string, unknown> = {
       templateName: opts.templateName,
@@ -804,8 +800,9 @@ export class MessagingService {
         body: { placeholders },
         ...(opts.kind === "otp" &&
         opts.code &&
-        String(this.config.get("INFOBIP_WHATSAPP_OTP_AUTH_BUTTON") || "")
-          .toLowerCase() === "true"
+        String(
+          this.config.get("INFOBIP_WHATSAPP_OTP_AUTH_BUTTON") || "",
+        ).toLowerCase() === "true"
           ? {
               buttons: [{ type: "URL", parameter: opts.code }],
             }

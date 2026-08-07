@@ -10,7 +10,6 @@ import {
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getSessionUser } from "@/lib/api/session";
 import { DynamicMapView } from "@/components/map/DynamicMapView";
 import { AgentCard } from "@/components/property/AgentCard";
 import { ContactAgentButton } from "@/components/property/ContactAgentButton";
@@ -20,6 +19,7 @@ import { SharePropertyButton } from "@/components/property/SharePropertyButton";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatBadge } from "@/components/ui/stat-badge";
+import { getSessionUser } from "@/lib/api/session";
 import {
   FURNISHED_OPTIONS,
   getLandPurposeLabel,
@@ -156,7 +156,10 @@ export default async function PropertyPage({
 
   if (property.listingCategory === "airbnb") {
     if (property.maxGuests != null) {
-      detailRows.push({ label: "Max guests", value: String(property.maxGuests) });
+      detailRows.push({
+        label: "Max guests",
+        value: String(property.maxGuests),
+      });
     }
     if (property.minNights != null) {
       detailRows.push({
@@ -186,7 +189,10 @@ export default async function PropertyPage({
       property.hasBackupPower && "Backup power",
     ].filter(Boolean) as string[];
     if (villaFlags.length) {
-      detailRows.push({ label: "Villa features", value: villaFlags.join(", ") });
+      detailRows.push({
+        label: "Villa features",
+        value: villaFlags.join(", "),
+      });
     }
   }
 
@@ -384,7 +390,9 @@ export default async function PropertyPage({
             {detailRows.length > 0 && (
               <Card className="shadow-warm">
                 <CardHeader>
-                  <CardTitle className="font-heading">Listing details</CardTitle>
+                  <CardTitle className="font-heading">
+                    Listing details
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">

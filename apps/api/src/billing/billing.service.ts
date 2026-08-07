@@ -1,20 +1,20 @@
+import { createHash } from "node:crypto";
 import {
   BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import {
   PaymentMethod,
   PaymentStatus,
   Role,
   SubscriptionStatus,
 } from "@prisma/client";
-import { createHash } from "crypto";
-import { PrismaService } from "../prisma/prisma.service";
-import { RedisService } from "../redis/redis.service";
-import { BankTransferDto, StkPushDto } from "./billing.dto";
+import type { PrismaService } from "../prisma/prisma.service";
+import type { RedisService } from "../redis/redis.service";
+import type { BankTransferDto, StkPushDto } from "./billing.dto";
 
 function normalizeMpesaPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -115,9 +115,9 @@ export class BillingService {
       const token = await this.getMpesaToken();
       const shortcode = this.config.get("MPESA_SHORTCODE") || "174379";
       const timestamp = this.timestamp();
-      const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString(
-        "base64",
-      );
+      const password = Buffer.from(
+        `${shortcode}${passkey}${timestamp}`,
+      ).toString("base64");
       const callbackUrl =
         this.config.get("MPESA_CALLBACK_URL") ||
         "http://localhost:4000/v1/billing/mpesa/callback";
@@ -283,7 +283,11 @@ export class BillingService {
     };
   }
 
-  async verifyBankPayment(adminId: string, paymentId: string, approve: boolean) {
+  async verifyBankPayment(
+    adminId: string,
+    paymentId: string,
+    approve: boolean,
+  ) {
     const payment = await this.prisma.payment.findUnique({
       where: { id: paymentId },
     });
@@ -357,7 +361,9 @@ export class BillingService {
       }),
     ]);
 
-    const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+    });
     if (!user.roles.includes(Role.AGENT)) {
       await this.prisma.user.update({
         where: { id: userId },

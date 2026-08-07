@@ -4,7 +4,7 @@
  *
  * Usage: node scripts/with-system-ca.cjs <command> [...args]
  */
-const { spawn } = require("child_process");
+const { spawn } = require("node:child_process");
 
 const args = process.argv.slice(2);
 if (!args.length) {

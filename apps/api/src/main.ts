@@ -1,6 +1,6 @@
-import { NestFactory } from "@nestjs/core";
 import { ValidationPipe } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import { NestFactory } from "@nestjs/core";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
 
@@ -17,7 +17,9 @@ async function bootstrap() {
     }),
   );
 
-  const origins = (config.get<string>("CORS_ORIGINS") || "http://localhost:3000")
+  const origins = (
+    config.get<string>("CORS_ORIGINS") || "http://localhost:3000"
+  )
     .split(",")
     .map((o) => o.trim())
     .filter(Boolean);
@@ -39,7 +41,8 @@ async function bootstrap() {
         type: "http",
         scheme: "bearer",
         bearerFormat: "JWT",
-        description: "Paste the accessToken from /v1/auth/otp/verify or /v1/auth/login",
+        description:
+          "Paste the accessToken from /v1/auth/otp/verify or /v1/auth/login",
       },
       "JWT",
     )

@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
-import { SanityService } from "./sanity.service";
 import { SanityController } from "./sanity.controller";
+import { SanityService } from "./sanity.service";
 
 @Module({
   controllers: [SanityController],

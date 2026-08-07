@@ -30,9 +30,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { AddressAutocomplete, type AddressResult } from "./AddressAutocomplete";
-import { type ImageItem, ImageUpload } from "./ImageUpload";
-import { LocationPicker } from "./LocationPicker";
 import {
   FURNISHED_OPTIONS,
   isFarmlandType,
@@ -46,9 +43,11 @@ import {
   ROAD_ACCESS_OPTIONS,
   WATER_SOURCE_OPTIONS,
 } from "@/lib/property-categories";
-
 // Re-export Amenity type from shared types
 import type { Amenity } from "@/types";
+import { AddressAutocomplete, type AddressResult } from "./AddressAutocomplete";
+import { type ImageItem, ImageUpload } from "./ImageUpload";
+import { LocationPicker } from "./LocationPicker";
 export type { Amenity };
 
 const formSchema = z.object({
@@ -72,9 +71,7 @@ const formSchema = z.object({
   landSizeAcres: z.coerce.number().min(0).optional(),
   landPurpose: z.enum(["residential", "commercial", "agricultural"]).optional(),
   // Rent
-  furnished: z
-    .enum(["unfurnished", "semi_furnished", "furnished"])
-    .optional(),
+  furnished: z.enum(["unfurnished", "semi_furnished", "furnished"]).optional(),
   depositAmount: z.coerce.number().min(0).optional(),
   availableFrom: z.string().optional(),
   petsAllowed: z.boolean().optional(),
@@ -384,22 +381,18 @@ export function ListingForm({
           landSize: isLand ? data.landSize : undefined,
           landSizeAcres: isLand ? data.landSizeAcres : undefined,
           landPurpose: isLand ? data.landPurpose : undefined,
-          furnished:
-            isRent && !isLand ? data.furnished : undefined,
+          furnished: isRent && !isLand ? data.furnished : undefined,
           depositAmount: isRent ? data.depositAmount : undefined,
           availableFrom: isRent ? data.availableFrom || undefined : undefined,
           petsAllowed: isRent && !isLand ? data.petsAllowed : undefined,
-          titleDeedReady:
-            isSale || isLand ? data.titleDeedReady : undefined,
+          titleDeedReady: isSale || isLand ? data.titleDeedReady : undefined,
           serviceCharge:
             isSale &&
             ["apartment", "condo", "townhouse"].includes(data.propertyType)
               ? data.serviceCharge
               : undefined,
           originalPrice: isSale ? data.originalPrice : undefined,
-          openHouseDate: isSale
-            ? data.openHouseDate || undefined
-            : undefined,
+          openHouseDate: isSale ? data.openHouseDate || undefined : undefined,
           maxGuests: isAirbnb ? data.maxGuests : undefined,
           minNights: isAirbnb ? data.minNights : undefined,
           cleaningFee: isAirbnb ? data.cleaningFee : undefined,
@@ -412,9 +405,7 @@ export function ListingForm({
           roadAccess: isLand ? data.roadAccess : undefined,
           fenced: isLand ? data.fenced : undefined,
           waterSource: isFarm ? data.waterSource : undefined,
-          cropsSuitable: isFarm
-            ? data.cropsSuitable || undefined
-            : undefined,
+          cropsSuitable: isFarm ? data.cropsSuitable || undefined : undefined,
           parkingSpaces: !isLand ? data.parkingSpaces : undefined,
           status: data.status,
           bedrooms: isLand ? 0 : data.bedrooms,
@@ -489,7 +480,10 @@ export function ListingForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+        className="space-y-6"
+      >
         {submitError ? (
           <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {submitError}

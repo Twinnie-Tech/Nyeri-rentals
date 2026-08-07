@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import {
   BadRequestException,
   ConflictException,
@@ -5,14 +6,13 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 import { Prisma } from "@prisma/client";
-import { randomInt } from "crypto";
-import { PrismaService } from "../prisma/prisma.service";
-import { RedisService } from "../redis/redis.service";
-import { MailService } from "../mail/mail.service";
-import { MessagingService } from "../messaging/messaging.service";
-import {
+import type { MailService } from "../mail/mail.service";
+import type { MessagingService } from "../messaging/messaging.service";
+import type { PrismaService } from "../prisma/prisma.service";
+import type { RedisService } from "../redis/redis.service";
+import type {
   CompleteOnboardingDto,
   RequestEmailVerificationDto,
   RequestPhoneVerificationDto,
@@ -72,24 +72,6 @@ export class UsersService {
 
   private emailLinkRateKey(userId: string) {
     return `otp:rate:email-link:${userId}`;
-  }
-
-  private async assertPhoneAvailable(userId: string, phone: string) {
-    const existing = await this.prisma.user.findUnique({ where: { phone } });
-    if (existing && existing.id !== userId) {
-      throw new ConflictException(
-        "This phone number is already registered. Please use a different number.",
-      );
-    }
-  }
-
-  private async assertEmailAvailable(userId: string, email: string) {
-    const existing = await this.prisma.user.findUnique({ where: { email } });
-    if (existing && existing.id !== userId) {
-      throw new ConflictException(
-        "This email is already registered. Please use a different email.",
-      );
-    }
   }
 
   async completeOnboarding(userId: string, dto: CompleteOnboardingDto) {
@@ -162,7 +144,7 @@ export class UsersService {
     });
 
     // Phone/email changes require dedicated OTP verification endpoints.
-    if (dto.phone !== undefined && dto.phone.trim()) {
+    if (dto.phone?.trim()) {
       const incoming = normalizePhone(dto.phone);
       if (incoming && incoming !== current?.phone) {
         throw new BadRequestException(
@@ -170,7 +152,7 @@ export class UsersService {
         );
       }
     }
-    if (dto.email !== undefined && dto.email.trim()) {
+    if (dto.email?.trim()) {
       const incoming = normalizeEmail(dto.email);
       if (incoming && incoming !== current?.email) {
         throw new BadRequestException(
@@ -278,7 +260,7 @@ export class UsersService {
     await this.redis.del(this.phoneLinkOtpKey(userId));
     await this.redis.del(this.phoneLinkPendingKey(userId));
 
-  return this.prisma.user.findUnique({
+    return this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,

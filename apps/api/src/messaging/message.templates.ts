@@ -14,9 +14,7 @@ export function buildWelcomeSms(params: {
   appUrl?: string;
 }) {
   const brand = params.brandName || "GreenKey Realty";
-  const greeting = params.name?.trim()
-    ? `Hi ${params.name.trim()}`
-    : "Welcome";
+  const greeting = params.name?.trim() ? `Hi ${params.name.trim()}` : "Welcome";
   const app = params.appUrl || "https://greenkeyrealty.co.ke";
   return `${greeting}! You're on ${brand}. Explore homes and connect with agents: ${app}`;
 }

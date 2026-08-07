@@ -32,8 +32,7 @@ export function PhoneOtpSignIn() {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const destination =
-    channel === "phone" ? phone : email.trim().toLowerCase();
+  const destination = channel === "phone" ? phone : email.trim().toLowerCase();
 
   function switchChannel(next: Channel) {
     setChannel(next);
@@ -243,8 +242,8 @@ export function PhoneOtpSignIn() {
             </p>
           ) : channel === "email" ? (
             <p className="text-xs rounded-lg bg-secondary/40 px-3 py-2">
-              Check your inbox (and spam folder) for the verification code. Works
-              with Gmail, Outlook, Yahoo, and other providers.
+              Check your inbox (and spam folder) for the verification code.
+              Works with Gmail, Outlook, Yahoo, and other providers.
             </p>
           ) : (
             <p className="text-xs rounded-lg bg-secondary/40 px-3 py-2">

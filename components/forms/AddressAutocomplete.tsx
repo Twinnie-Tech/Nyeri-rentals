@@ -77,31 +77,34 @@ export function AddressAutocomplete({
   }, []);
 
   // Fetch suggestions from Mapbox
-  const fetchSuggestions = useCallback(async (query: string) => {
-    if (!token || query.length < 3) {
-      setSuggestions([]);
-      return;
-    }
+  const fetchSuggestions = useCallback(
+    async (query: string) => {
+      if (!token || query.length < 3) {
+        setSuggestions([]);
+        return;
+      }
 
-    setIsLoading(true);
-    try {
-      const encodedQuery = encodeURIComponent(query);
-      // Kenya-focused geocoding with broader place types for better city/postcode coverage.
-      const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?access_token=${token}&limit=5&country=KE&types=address,postcode,place,locality,neighborhood,district`;
+      setIsLoading(true);
+      try {
+        const encodedQuery = encodeURIComponent(query);
+        // Kenya-focused geocoding with broader place types for better city/postcode coverage.
+        const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?access_token=${token}&limit=5&country=KE&types=address,postcode,place,locality,neighborhood,district`;
 
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch suggestions");
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Failed to fetch suggestions");
 
-      const data = await response.json();
-      setSuggestions(data.features || []);
-      setIsOpen(data.features?.length > 0);
-    } catch (error) {
-      console.error("Autocomplete error:", error);
-      setSuggestions([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+        const data = await response.json();
+        setSuggestions(data.features || []);
+        setIsOpen(data.features?.length > 0);
+      } catch (error) {
+        console.error("Autocomplete error:", error);
+        setSuggestions([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [token],
+  );
 
   // Debounced search
   const debouncedSearch = useMemo(
@@ -131,17 +134,18 @@ export function AddressAutocomplete({
       for (const ctx of feature.context) {
         if (ctx.id.startsWith("place")) {
           city = ctx.text;
-        } else if (ctx.id.startsWith("locality") || ctx.id.startsWith("district")) {
+        } else if (
+          ctx.id.startsWith("locality") ||
+          ctx.id.startsWith("district")
+        ) {
           city = city || ctx.text;
         } else if (ctx.id.startsWith("neighborhood")) {
           city = city || ctx.text;
         } else if (ctx.id.startsWith("region")) {
           // Normalize short codes (e.g. US-CA -> CA, KE-36 -> 36)
           state =
-            ctx.short_code
-              ?.replace("US-", "")
-              .replace("KE-", "")
-              .trim() || ctx.text;
+            ctx.short_code?.replace("US-", "").replace("KE-", "").trim() ||
+            ctx.text;
         } else if (ctx.id.startsWith("postcode")) {
           zipCode = ctx.text;
         }
@@ -181,8 +185,8 @@ export function AddressAutocomplete({
       }
 
       try {
-        const reverseUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${address.lng},${address.lat}.json?access_token=${token}&limit=3&country=KE&types=address,postcode,place,locality,neighborhood,district`;  
-        const response = await fetch(reverseUrl); 
+        const reverseUrl = `https://api.mapbox.com/geocoding/v5/mapbox.places/${address.lng},${address.lat}.json?access_token=${token}&limit=3&country=KE&types=address,postcode,place,locality,neighborhood,district`;
+        const response = await fetch(reverseUrl);
         if (!response.ok) return address;
 
         const data = await response.json();

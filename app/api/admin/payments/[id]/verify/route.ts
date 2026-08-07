@@ -22,8 +22,7 @@ export async function POST(
     });
     return NextResponse.json(data);
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Verification failed";
+    const message = err instanceof Error ? err.message : "Verification failed";
     return NextResponse.json({ message }, { status: 400 });
   }
 }

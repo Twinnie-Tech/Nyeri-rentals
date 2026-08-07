@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
-import { AgentsService } from "./agents.service";
-import { AgentsController } from "./agents.controller";
 import { SanityModule } from "../sanity/sanity.module";
+import { AgentsController } from "./agents.controller";
+import { AgentsService } from "./agents.service";
 
 @Module({
   imports: [SanityModule],

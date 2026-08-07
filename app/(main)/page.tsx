@@ -319,8 +319,7 @@ export default async function HomePage() {
                 "Note size in acres and describe water access, roads, and current use.",
                 "Drone-style photos and map pins help buyers understand the parcel.",
               ],
-              browseHref:
-                "/properties?type=farmland&landPurpose=agricultural",
+              browseHref: "/properties?type=farmland&landPurpose=agricultural",
               browseLabel: "Open farmland filter",
               relatedLinks: [
                 { href: "/properties?type=land", label: "Plots" },
@@ -413,7 +412,10 @@ export default async function HomePage() {
               className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-secondary/20 blur-2xl"
               aria-hidden="true"
             />
-            <Upload className="h-8 w-8 text-secondary mb-6" aria-hidden="true" />
+            <Upload
+              className="h-8 w-8 text-secondary mb-6"
+              aria-hidden="true"
+            />
             <h2 className="text-2xl md:text-3xl font-heading font-semibold mb-3">
               List homes, villas, Airbnb stays & land
             </h2>

@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/api/constants";
 
 const API_URL =
@@ -74,9 +74,7 @@ async function fetchMe(accessToken: string): Promise<MeResponse | null> {
   }
 }
 
-async function refreshTokens(
-  refreshToken: string,
-): Promise<TokenPair | null> {
+async function refreshTokens(refreshToken: string): Promise<TokenPair | null> {
   try {
     const res = await fetch(`${API_URL}/auth/refresh`, {
       method: "POST",
@@ -140,7 +138,7 @@ export default async function proxy(req: NextRequest) {
     response = NextResponse.redirect(new URL("/onboarding", req.url));
   } else if (isOnboarding && user.onboardingComplete) {
     response = NextResponse.redirect(new URL("/", req.url));
-  } else   if (pathname.startsWith("/dashboard")) {
+  } else if (pathname.startsWith("/dashboard")) {
     const isAdmin = user.roles?.includes("ADMIN");
     if (!hasActivePlan(user)) {
       response = NextResponse.redirect(new URL("/pricing", req.url));

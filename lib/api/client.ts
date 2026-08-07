@@ -35,12 +35,16 @@ export async function apiFetch<T>(
     headers.Authorization = `Bearer ${options.accessToken}`;
   }
 
-  const res = await fetch(`${API_URL}${path.startsWith("/") ? path : `/${path}`}`, {
-    method: options.method || "GET",
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    cache: options.cache || "no-store",
-  });
+  const res = await fetch(
+    `${API_URL}${path.startsWith("/") ? path : `/${path}`}`,
+    {
+      method: options.method || "GET",
+      headers,
+      body:
+        options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      cache: options.cache || "no-store",
+    },
+  );
 
   const text = await res.text();
   let data: unknown = null;

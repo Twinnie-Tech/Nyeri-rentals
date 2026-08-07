@@ -1,3 +1,5 @@
+import { ListingCategory, ListingStatus, PropertyType } from "@prisma/client";
+import { Type } from "class-transformer";
 import {
   IsArray,
   IsBoolean,
@@ -8,12 +10,6 @@ import {
   MinLength,
   ValidateNested,
 } from "class-validator";
-import {
-  ListingCategory,
-  ListingStatus,
-  PropertyType,
-} from "@prisma/client";
-import { Type } from "class-transformer";
 
 export class PropertyAddressDto {
   @IsString()

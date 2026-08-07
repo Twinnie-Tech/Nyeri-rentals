@@ -1,5 +1,3 @@
-import { getSessionUser } from "@/lib/api/session";
-import { redirect } from "next/navigation";
 import {
   ArrowRight,
   Home,
@@ -9,8 +7,10 @@ import {
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSessionUser } from "@/lib/api/session";
 import { sanityFetch } from "@/lib/sanity/live";
 import {
   AGENT_DASHBOARD_QUERY,

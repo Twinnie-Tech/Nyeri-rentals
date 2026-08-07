@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -120,7 +120,9 @@ export function AgentCheckout() {
         <button
           type="button"
           className={`flex-1 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-            tab === "mpesa" ? "bg-background shadow-sm" : "text-muted-foreground"
+            tab === "mpesa"
+              ? "bg-background shadow-sm"
+              : "text-muted-foreground"
           }`}
           onClick={() => setTab("mpesa")}
         >
@@ -163,7 +165,9 @@ export function AgentCheckout() {
               {plan.bank.name}
               {plan.bank.branch ? ` · ${plan.bank.branch}` : ""}
             </p>
-            <p className="font-mono">{plan.bank.accountNumber || "Set BANK_ACCOUNT_NUMBER"}</p>
+            <p className="font-mono">
+              {plan.bank.accountNumber || "Set BANK_ACCOUNT_NUMBER"}
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="bank-ref">Transfer reference</Label>

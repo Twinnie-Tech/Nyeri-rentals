@@ -1,7 +1,19 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { UsersService } from "./users.service";
 import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from "@nestjs/common";
+import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
+import {
+  type AuthUser,
+  CurrentUser,
+} from "../common/decorators/current-user.decorator";
+import type {
   CompleteOnboardingDto,
   RequestEmailVerificationDto,
   RequestPhoneVerificationDto,
@@ -9,7 +21,7 @@ import {
   VerifyEmailDto,
   VerifyPhoneDto,
 } from "./users.dto";
-import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
+import type { UsersService } from "./users.service";
 
 @ApiTags("users")
 @ApiBearerAuth("JWT")
@@ -18,7 +30,9 @@ export class UsersController {
   constructor(private users: UsersService) {}
 
   @Post("onboarding")
-  @ApiOperation({ summary: "Complete user onboarding (requires verified phone + email)" })
+  @ApiOperation({
+    summary: "Complete user onboarding (requires verified phone + email)",
+  })
   completeOnboarding(
     @CurrentUser() user: AuthUser,
     @Body() dto: CompleteOnboardingDto,
@@ -27,14 +41,18 @@ export class UsersController {
   }
 
   @Patch("me")
-  @ApiOperation({ summary: "Update profile (name). Phone/email require OTP verification endpoints." })
+  @ApiOperation({
+    summary:
+      "Update profile (name). Phone/email require OTP verification endpoints.",
+  })
   updateProfile(@CurrentUser() user: AuthUser, @Body() dto: UpdateProfileDto) {
     return this.users.updateProfile(user.id, dto);
   }
 
   @Post("me/phone/request-verification")
   @ApiOperation({
-    summary: "Send OTP to verify and attach a phone number to the signed-in account",
+    summary:
+      "Send OTP to verify and attach a phone number to the signed-in account",
   })
   requestPhoneVerification(
     @CurrentUser() user: AuthUser,
@@ -45,7 +63,8 @@ export class UsersController {
 
   @Post("me/phone/verify")
   @ApiOperation({
-    summary: "Verify OTP and link the phone to this account (sets phoneVerifiedAt)",
+    summary:
+      "Verify OTP and link the phone to this account (sets phoneVerifiedAt)",
   })
   verifyPhone(@CurrentUser() user: AuthUser, @Body() dto: VerifyPhoneDto) {
     return this.users.verifyPhone(user.id, dto);
@@ -64,7 +83,8 @@ export class UsersController {
 
   @Post("me/email/verify")
   @ApiOperation({
-    summary: "Verify OTP and link the email to this account (sets emailVerifiedAt)",
+    summary:
+      "Verify OTP and link the email to this account (sets emailVerifiedAt)",
   })
   verifyEmail(@CurrentUser() user: AuthUser, @Body() dto: VerifyEmailDto) {
     return this.users.verifyEmail(user.id, dto);

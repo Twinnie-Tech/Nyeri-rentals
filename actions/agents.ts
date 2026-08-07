@@ -2,7 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { apiFetch } from "@/lib/api/client";
-import { getAccessToken, getSessionUser, hasActiveAgentPlan } from "@/lib/api/session";
+import {
+  getAccessToken,
+  getSessionUser,
+  hasActiveAgentPlan,
+} from "@/lib/api/session";
 import { sanityFetch } from "@/lib/sanity/live";
 import { AGENT_BY_USER_ID_QUERY } from "@/lib/sanity/queries";
 import type { AgentOnboardingData, AgentProfileData } from "@/types";

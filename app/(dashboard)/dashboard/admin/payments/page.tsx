@@ -26,10 +26,9 @@ export default async function AdminPaymentsPage() {
   const accessToken = await getAccessToken();
   if (!accessToken) redirect("/sign-in");
 
-  const payments = await apiFetch<PendingPayment[]>(
-    "/admin/payments/pending",
-    { accessToken },
-  ).catch(() => []);
+  const payments = await apiFetch<PendingPayment[]>("/admin/payments/pending", {
+    accessToken,
+  }).catch(() => []);
 
   return (
     <div>

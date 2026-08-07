@@ -148,7 +148,9 @@ export function HeroCarousel() {
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-heading font-semibold text-white tracking-tight mb-4 transition-opacity duration-500">
             {slide.title}
           </h1>
-          <p className="text-lg text-white/85 mb-8 max-w-xl">{slide.subtitle}</p>
+          <p className="text-lg text-white/85 mb-8 max-w-xl">
+            {slide.subtitle}
+          </p>
 
           <div className="flex flex-col sm:flex-row gap-3 mb-10">
             <Button
@@ -193,7 +195,11 @@ export function HeroCarousel() {
         </div>
 
         <div className="mt-10 flex items-center justify-between gap-4">
-          <div className="flex flex-wrap gap-2" role="tablist" aria-label="Slides">
+          <div
+            className="flex flex-wrap gap-2"
+            role="tablist"
+            aria-label="Slides"
+          >
             {HERO_SLIDES.map((item, i) => (
               <button
                 key={item.id}

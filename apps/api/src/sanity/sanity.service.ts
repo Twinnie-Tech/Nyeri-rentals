@@ -3,7 +3,7 @@ import {
   Logger,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
+import type { ConfigService } from "@nestjs/config";
 
 /**
  * Sanity CMS client held only on the BFF.
@@ -82,9 +82,10 @@ export class SanityService {
     }>;
   }
 
-  private resultDocumentId(
-    result?: { id?: string; documentId?: string },
-  ): string | undefined {
+  private resultDocumentId(result?: {
+    id?: string;
+    documentId?: string;
+  }): string | undefined {
     return result?.id || result?.documentId;
   }
 
@@ -100,7 +101,9 @@ export class SanityService {
     return { ...doc, _id: id };
   }
 
-  async createOrReplaceDocument(doc: Record<string, unknown> & { _id: string }) {
+  async createOrReplaceDocument(
+    doc: Record<string, unknown> & { _id: string },
+  ) {
     const result = await this.mutate([{ createOrReplace: doc }]);
     return {
       ...doc,
@@ -176,7 +179,9 @@ export class SanityService {
       throw new Error("Sanity asset upload failed");
     }
 
-    const asset = (await res.json()) as { document: { _id: string; url?: string } };
+    const asset = (await res.json()) as {
+      document: { _id: string; url?: string };
+    };
     return { _id: asset.document._id, url: asset.document.url };
   }
 }

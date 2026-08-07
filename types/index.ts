@@ -51,7 +51,12 @@ export interface Property {
     | "villa"
     | "land"
     | "farmland";
-  landSize?: "quarter_acre" | "half_acre" | "one_acre" | "multi_acre" | "custom";
+  landSize?:
+    | "quarter_acre"
+    | "half_acre"
+    | "one_acre"
+    | "multi_acre"
+    | "custom";
   landSizeAcres?: number;
   landPurpose?: "residential" | "commercial" | "agricultural";
   status: "active" | "pending" | "sold" | "rented";
@@ -156,7 +161,12 @@ export interface ListingFormData {
     | "villa"
     | "land"
     | "farmland";
-  landSize?: "quarter_acre" | "half_acre" | "one_acre" | "multi_acre" | "custom";
+  landSize?:
+    | "quarter_acre"
+    | "half_acre"
+    | "one_acre"
+    | "multi_acre"
+    | "custom";
   landSizeAcres?: number;
   landPurpose?: "residential" | "commercial" | "agricultural";
   status?: "active" | "pending" | "sold" | "rented";

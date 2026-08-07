@@ -1,8 +1,8 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { apiFetch } from "@/lib/api/client";
-import { clearAuthCookies, setAuthCookies } from "@/lib/api/cookies";
 import { REFRESH_COOKIE } from "@/lib/api/constants";
-import { cookies } from "next/headers";
+import { clearAuthCookies, setAuthCookies } from "@/lib/api/cookies";
 
 type AuthResponse = {
   accessToken: string;

@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import {
   IsEmail,
   IsIn,
@@ -7,7 +8,6 @@ import {
   MinLength,
   ValidateIf,
 } from "class-validator";
-import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 
 /** E.164-ish mobile: +2547… / 07… and common regional formats */
 const PHONE_RE = /^(\+\d{1,3}|0)[1-9]\d{7,12}$/;

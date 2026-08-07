@@ -1,9 +1,12 @@
 import { Body, Controller, Get, Patch, Post, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiTags } from "@nestjs/swagger";
-import { AgentsService } from "./agents.service";
-import { AgentOnboardingDto, UpdateAgentDto } from "./agents.dto";
-import { CurrentUser, AuthUser } from "../common/decorators/current-user.decorator";
+import {
+  type AuthUser,
+  CurrentUser,
+} from "../common/decorators/current-user.decorator";
 import { AgentPlanGuard } from "../common/guards/agent-plan.guard";
+import type { AgentOnboardingDto, UpdateAgentDto } from "./agents.dto";
+import type { AgentsService } from "./agents.service";
 
 @ApiTags("agents")
 @ApiBearerAuth("JWT")
@@ -13,7 +16,9 @@ export class AgentsController {
 
   @Post("ensure")
   @UseGuards(AgentPlanGuard)
-  @ApiOperation({ summary: "Ensure agent record exists (active plan required)" })
+  @ApiOperation({
+    summary: "Ensure agent record exists (active plan required)",
+  })
   ensure(@CurrentUser() user: AuthUser) {
     return this.agents.ensureAgent(user.id);
   }

@@ -1,5 +1,5 @@
-import { IsOptional, IsString, Matches } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
+import { IsOptional, IsString, Matches } from "class-validator";
 
 const PHONE_RE = /^(\+254|0)[17]\d{8}$/;
 

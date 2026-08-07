@@ -1,18 +1,18 @@
+import { createHash, randomBytes, randomInt } from "node:crypto";
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
+import type { ConfigService } from "@nestjs/config";
+import type { JwtService } from "@nestjs/jwt";
 import { Prisma, Role } from "@prisma/client";
 import * as bcrypt from "bcryptjs";
-import { createHash, randomInt, randomBytes } from "crypto";
-import { PrismaService } from "../prisma/prisma.service";
-import { RedisService } from "../redis/redis.service";
-import { MailService } from "../mail/mail.service";
-import { MessagingService } from "../messaging/messaging.service";
-import {
+import type { MailService } from "../mail/mail.service";
+import type { MessagingService } from "../messaging/messaging.service";
+import type { PrismaService } from "../prisma/prisma.service";
+import type { RedisService } from "../redis/redis.service";
+import type {
   LoginEmailDto,
   RegisterEmailDto,
   RequestOtpDto,
@@ -112,7 +112,8 @@ export class AuthService {
             sent.sms.messageId !== "failed" &&
             sent.sms.provider !== "off",
         ),
-        whatsapp: this.messaging.isWhatsAppEnabled() &&
+        whatsapp:
+          this.messaging.isWhatsAppEnabled() &&
           Boolean(
             sent.whatsapp &&
               sent.whatsapp.provider !== "off" &&

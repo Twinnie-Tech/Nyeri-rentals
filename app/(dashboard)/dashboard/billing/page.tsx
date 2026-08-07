@@ -23,7 +23,9 @@ export default async function BillingPage() {
         <div className="rounded-2xl border border-border bg-card p-6 text-sm space-y-2">
           <p>
             Status:{" "}
-            <strong className="text-foreground">{user.subscription.status}</strong>
+            <strong className="text-foreground">
+              {user.subscription.status}
+            </strong>
           </p>
           {user.subscription.currentPeriodEnd ? (
             <p>
