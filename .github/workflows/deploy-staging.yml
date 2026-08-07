@@ -20,7 +20,7 @@ jobs:
     name: Wait for CI
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 9
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: staging
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Railway CLI
         run: npm install -g @railway/cli
       - name: Deploy API to Railway staging
