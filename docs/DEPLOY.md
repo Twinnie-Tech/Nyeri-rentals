@@ -292,6 +292,7 @@ Workflows already in repo:
 | Migrate fails on boot | Check `DATABASE_URL`; ensure migrations committed under `apps/api/prisma/migrations` |
 | Docker build fails in CI | See `ci.yml` job `api-docker`; run locally: `docker build -f Dockerfile.api .` |
 | OTP works locally only | Staging must not use `SMS_PROVIDER=console` unless you read Railway logs |
+| Vercel: `Module '"@prisma/client"' has no exported member 'Role'` | Next was typechecking Nest under `apps/api`. Root `tsconfig.json` must **exclude** `apps/api`. Nest/Prisma belong on Railway, not the Vercel Next build. |
 
 ---
 

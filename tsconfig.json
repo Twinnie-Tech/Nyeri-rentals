@@ -38,6 +38,9 @@
   ],
   "exclude": [
     "node_modules",
-    ".next/dev"
+    ".next/dev",
+    "apps/api",
+    "apps/api/**",
+    "scripts/seed"
   ]
 }
