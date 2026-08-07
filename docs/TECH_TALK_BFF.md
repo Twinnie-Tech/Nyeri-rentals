@@ -123,6 +123,8 @@ npm run dev             # http://localhost:3000
 
 Scripts set `--use-system-ca` automatically (Windows AV TLS). No need to export `NODE_OPTIONS` by hand.
 
+**Cloud (staging / production):** see [`docs/DEPLOY.md`](./DEPLOY.md) — Vercel + Railway + Upstash + Sanity datasets.
+
 JWT access cookies last 15 minutes. `proxy.ts` silently rotates them via Nest `POST /auth/refresh` when you navigate protected routes. You can also hit `POST /api/auth/refresh` if a long SPA session needs a manual refresh.
 
 ### Env checklist

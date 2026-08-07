@@ -111,3 +111,12 @@ MAILTRAP_PASS=…   # Sending stream token
 ```
 
 When any non-`console` provider is used, `devCode` is **not** returned.
+
+## Deploy (Railway)
+
+Cloud runbook (Vercel + Railway + Upstash + Sanity): [`../../docs/DEPLOY.md`](../../docs/DEPLOY.md).
+
+- Image: repo-root `Dockerfile.api` (see `railway.toml`)
+- Health: `GET /v1/health`
+- On boot: `prisma migrate deploy` then `node dist/main.js`
+- Set `DATABASE_URL`, `REDIS_URL` (Upstash), JWT, `SANITY_*`, messaging from `.env.staging.example` / `.env.production.example`

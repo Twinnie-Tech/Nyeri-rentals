@@ -1,0 +1,18 @@
+# Dependabot — keep Actions and npm deps reasonably fresh
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    ignore:
+      # Major Next upgrades should be intentional
+      - dependency-name: next
+        update-types: ["version-update:semver-major"]

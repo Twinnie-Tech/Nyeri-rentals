@@ -1,0 +1,112 @@
+# Source of truth for GreenKey environments (dev / staging / prod).
+# Fill real secrets in host dashboards — never commit secret values.
+
+environments:
+  development:
+    label: Local development
+    git_branch: null
+    urls:
+      web: http://localhost:3000
+      api: http://localhost:4000/v1
+      swagger: http://localhost:4000/docs
+    infrastructure:
+      web: local (pnpm / npm run dev)
+      api: local (pnpm dev:api)
+      postgres: docker-compose (localhost:5433)
+      redis: docker-compose (localhost:6379)
+      sanity_dataset: development # or production for shared CMS while building
+    env_templates:
+      api: apps/api/.env.example
+      web: .env.example
+    notes:
+      - Run pnpm docker:up then pnpm dev:api and pnpm/npm run dev
+      - Windows AV TLS is handled by scripts/with-system-ca.cjs
+
+  staging:
+    label: Client / QA staging
+    git_branch: develop
+    urls:
+      web: https://staging.yourdomain.com
+      api: https://api-staging.yourdomain.com/v1
+      swagger: https://api-staging.yourdomain.com/docs
+    infrastructure:
+      web: Vercel (Staging / develop branch)
+      api: Railway (staging environment)
+      postgres: Railway Postgres (staging)
+      redis: Upstash (greenkey-staging)
+      sanity_dataset: staging
+    env_templates:
+      api: apps/api/.env.staging.example
+      web: .env.example (Staging section)
+    github_environment: staging
+    github_secrets:
+      - RAILWAY_TOKEN
+      - RAILWAY_SERVICE_ID
+      - RAILWAY_ENVIRONMENT_ID
+      - VERCEL_TOKEN # optional if using CLI deploy
+      - VERCEL_ORG_ID
+      - VERCEL_PROJECT_ID
+    providers:
+      email: mailtrap (testing inbox)
+      sms: africastalking sandbox
+      whatsapp: infobip trial
+      mpesa: sandbox
+    workflow: .github/workflows/deploy-staging.yml
+
+  production:
+    label: Public production
+    git_branch: main
+    urls:
+      web: https://yourdomain.com
+      api: https://api.yourdomain.com/v1
+      swagger: https://api.yourdomain.com/docs
+    infrastructure:
+      web: Vercel (Production)
+      api: Railway (production environment)
+      postgres: Railway Postgres (production)
+      redis: Upstash (greenkey-prod)
+      sanity_dataset: production
+    env_templates:
+      api: apps/api/.env.production.example
+      web: .env.example (Production section)
+    github_environment: production
+    github_secrets:
+      - RAILWAY_TOKEN
+      - RAILWAY_SERVICE_ID
+      - RAILWAY_ENVIRONMENT_ID
+      - VERCEL_TOKEN
+      - VERCEL_ORG_ID
+      - VERCEL_PROJECT_ID
+    providers:
+      email: mailtrap-send | resend | sendgrid | smtp
+      sms: africastalking live
+      whatsapp: infobip + approved templates
+      mpesa: production
+    workflow: .github/workflows/deploy-production.yml
+    protection: require reviewer approval on GitHub Environment production
+
+required_api_vars: &api_vars
+  - DATABASE_URL
+  - REDIS_URL
+  - JWT_ACCESS_SECRET
+  - JWT_REFRESH_SECRET
+  - APP_URL
+  - API_URL
+  - CORS_ORIGINS
+  - SANITY_PROJECT_ID
+  - SANITY_DATASET
+  - SANITY_WRITE_TOKEN
+
+required_web_vars:
+  - NEXT_PUBLIC_API_URL
+  - API_URL
+  - NEXT_PUBLIC_SANITY_PROJECT_ID
+  - NEXT_PUBLIC_SANITY_DATASET
+  - NEXT_PUBLIC_MAPBOX_TOKEN
+
+smoke_checks:
+  - GET {api}/health → ok, db, redis true
+  - Sign-in OTP (phone or email)
+  - Onboarding verify phone + email
+  - Create listing → Sanity + PropertyMirror
+  - Swagger Authorize with JWT

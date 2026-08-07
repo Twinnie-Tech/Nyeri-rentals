@@ -33,8 +33,11 @@ More detail: [`docs/TECH_TALK_BFF.md`](docs/TECH_TALK_BFF.md) · [`docs/MOBILE_A
 │   └── with-system-ca.cjs   # Auto NODE_OPTIONS for Windows AV TLS
 ├── sanity/              # Sanity schemas + studio config
 ├── apps/api/            # NestJS BFF (@greenkey/api)
-├── docs/                # BFF tech talk, mobile contracts, messaging
-├── docker-compose.yml   # Postgres + Redis
+├── docs/                # DEPLOY, BFF tech talk, mobile contracts, messaging
+├── Dockerfile.api       # Nest image for Railway
+├── railway.toml
+├── vercel.json
+├── docker-compose.yml   # Local Postgres + Redis
 └── package.json         # pnpm workspace root
 ```
 
@@ -277,7 +280,25 @@ Full route list: [`apps/api/README.md`](apps/api/README.md) · Mobile contracts:
 
 ## Deploy notes
 
-- **Web (Vercel):** set Sanity read + Mapbox + `NEXT_PUBLIC_API_URL` pointing at your hosted API.
-- **API:** host Nest separately; provide managed Postgres, Redis, JWT secrets, `SANITY_WRITE_TOKEN`, messaging, and Daraja / bank env vars.
-- Ensure Sanity `projectId` / `dataset` are set for the Vercel build.
-- Production WhatsApp OTP should use an approved Infobip/Meta template (`INFOBIP_WHATSAPP_OTP_TEMPLATE`); Africa's Talking sandbox SMS is for QA only.
+**Full step-by-step (dev → staging → prod):** [`docs/DEPLOY.md`](docs/DEPLOY.md)
+
+**Stack:** Vercel (Next) · Railway (Nest + Postgres) · Upstash (Redis) · Sanity datasets
+
+| Env | Branch | Web | API | Sanity |
+|-----|--------|-----|-----|--------|
+| Dev | local | `pnpm dev` | `pnpm dev:api` + Docker | local `.env` |
+| Staging | `develop` | Vercel | Railway | dataset `staging` |
+| Prod | `main` | Vercel | Railway | dataset `production` |
+
+| Artifact | Path |
+|----------|------|
+| Env matrix | `deploy/environments.yaml` |
+| Nest Docker | `Dockerfile.api` + `railway.toml` |
+| Vercel | `vercel.json` |
+| CI | `.github/workflows/ci.yml` |
+| Deploy staging | `.github/workflows/deploy-staging.yml` |
+| Deploy production | `.github/workflows/deploy-production.yml` |
+| API env templates | `apps/api/.env.development.example`, `.env.staging.example`, `.env.production.example` |
+| Web env template | `.env.example` |
+
+Never put `SANITY_WRITE_TOKEN` or JWT secrets on Vercel — only on Railway Nest.
