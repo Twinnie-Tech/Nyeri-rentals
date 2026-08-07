@@ -17,6 +17,10 @@
 /.next/
 /out/
 
+# nest api
+/apps/api/dist/
+/apps/api/node_modules/
+
 # production
 /build
 
@@ -32,6 +36,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env*.example
+!apps/api/.env*.example
 
 # vercel
 .vercel

@@ -21,6 +21,7 @@ const statusColors = {
   active: "bg-green-100 text-green-800",
   pending: "bg-yellow-100 text-yellow-800",
   sold: "bg-red-100 text-red-800",
+  rented: "bg-blue-100 text-blue-800",
 };
 
 export function ListingStatusSelect({
@@ -29,7 +30,9 @@ export function ListingStatusSelect({
 }: ListingStatusSelectProps) {
   const [isPending, startTransition] = useTransition();
 
-  const handleStatusChange = (newStatus: "active" | "pending" | "sold") => {
+  const handleStatusChange = (
+    newStatus: "active" | "pending" | "sold" | "rented",
+  ) => {
     startTransition(async () => {
       try {
         await updateListingStatus(listingId, newStatus);
@@ -70,6 +73,11 @@ export function ListingStatusSelect({
         <SelectItem value="sold">
           <Badge variant="outline" className={statusColors.sold}>
             Sold
+          </Badge>
+        </SelectItem>
+        <SelectItem value="rented">
+          <Badge variant="outline" className={statusColors.rented}>
+            Rented
           </Badge>
         </SelectItem>
       </SelectContent>

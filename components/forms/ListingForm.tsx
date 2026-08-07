@@ -30,34 +30,76 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  FURNISHED_OPTIONS,
+  isFarmlandType,
+  isLandType,
+  isVillaType,
+  LAND_PURPOSES,
+  LAND_SIZES,
+  LISTING_CATEGORIES,
+  LISTING_STATUSES,
+  PROPERTY_TYPES,
+  ROAD_ACCESS_OPTIONS,
+  WATER_SOURCE_OPTIONS,
+} from "@/lib/property-categories";
+// Re-export Amenity type from shared types
+import type { Amenity } from "@/types";
 import { AddressAutocomplete, type AddressResult } from "./AddressAutocomplete";
 import { type ImageItem, ImageUpload } from "./ImageUpload";
 import { LocationPicker } from "./LocationPicker";
-
-const PROPERTY_TYPES = [
-  { value: "house", label: "House" },
-  { value: "apartment", label: "Apartment" },
-  { value: "condo", label: "Condo" },
-  { value: "townhouse", label: "Townhouse" },
-  { value: "land", label: "Land" },
-];
-
-const STATUS_OPTIONS = [
-  { value: "active", label: "Active" },
-  { value: "pending", label: "Pending" },
-  { value: "sold", label: "Sold" },
-];
-
-// Re-export Amenity type from shared types
-import type { Amenity } from "@/types";
 export type { Amenity };
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters"),
   description: z.string().min(20, "Description must be at least 20 characters"),
   price: z.coerce.number().positive("Price must be positive"),
-  propertyType: z.enum(["house", "apartment", "condo", "townhouse", "land"]),
-  status: z.enum(["active", "pending", "sold"]).optional(),
+  listingCategory: z.enum(["rent", "sale", "airbnb"]),
+  propertyType: z.enum([
+    "house",
+    "apartment",
+    "bedsitter",
+    "condo",
+    "townhouse",
+    "villa",
+    "land",
+    "farmland",
+  ]),
+  landSize: z
+    .enum(["quarter_acre", "half_acre", "one_acre", "multi_acre", "custom"])
+    .optional(),
+  landSizeAcres: z.coerce.number().min(0).optional(),
+  landPurpose: z.enum(["residential", "commercial", "agricultural"]).optional(),
+  // Rent
+  furnished: z.enum(["unfurnished", "semi_furnished", "furnished"]).optional(),
+  depositAmount: z.coerce.number().min(0).optional(),
+  availableFrom: z.string().optional(),
+  petsAllowed: z.boolean().optional(),
+  // Sale
+  titleDeedReady: z.boolean().optional(),
+  serviceCharge: z.coerce.number().min(0).optional(),
+  originalPrice: z.coerce.number().positive().optional(),
+  openHouseDate: z.string().optional(),
+  // Airbnb
+  maxGuests: z.coerce.number().min(1).optional(),
+  minNights: z.coerce.number().min(1).optional(),
+  cleaningFee: z.coerce.number().min(0).optional(),
+  checkInTime: z.string().optional(),
+  checkOutTime: z.string().optional(),
+  // Villa
+  hasPool: z.boolean().optional(),
+  hasStaffQuarters: z.boolean().optional(),
+  hasGarden: z.boolean().optional(),
+  hasBackupPower: z.boolean().optional(),
+  // Land / farmland
+  roadAccess: z.enum(["tarmac", "murram", "footpath", "none"]).optional(),
+  fenced: z.boolean().optional(),
+  waterSource: z
+    .enum(["borehole", "river", "piped", "rain", "none"])
+    .optional(),
+  cropsSuitable: z.string().optional(),
+  parkingSpaces: z.coerce.number().min(0).optional(),
+  status: z.enum(["active", "pending", "sold", "rented"]).optional(),
   bedrooms: z.coerce.number().min(0),
   bathrooms: z.coerce.number().min(0),
   squareFeet: z.coerce.number().min(0),
@@ -66,15 +108,12 @@ const formSchema = z.object({
     .min(1800)
     .max(new Date().getFullYear())
     .optional(),
-  // Address fields are still stored but auto-filled from autocomplete
   street: z.string().min(1, "Address is required"),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
-  // Optional because many KE addresses do not have a postcode in geocoding data.
   zipCode: z.string().optional().default(""),
   amenities: z.array(z.string()).optional(),
 });
-
 // Input type: what the form fields receive (strings from inputs)
 type FormDataInput = z.input<typeof formSchema>;
 // Output type: what validation produces (coerced to proper types)
@@ -98,7 +137,33 @@ interface ListingFormProps {
     title: string;
     description?: string;
     price: number;
+    listingCategory?: string;
     propertyType: string;
+    landSize?: string;
+    landSizeAcres?: number;
+    landPurpose?: string;
+    furnished?: string;
+    depositAmount?: number;
+    availableFrom?: string;
+    petsAllowed?: boolean;
+    titleDeedReady?: boolean;
+    serviceCharge?: number;
+    originalPrice?: number;
+    openHouseDate?: string;
+    maxGuests?: number;
+    minNights?: number;
+    cleaningFee?: number;
+    checkInTime?: string;
+    checkOutTime?: string;
+    hasPool?: boolean;
+    hasStaffQuarters?: boolean;
+    hasGarden?: boolean;
+    hasBackupPower?: boolean;
+    roadAccess?: string;
+    fenced?: boolean;
+    waterSource?: string;
+    cropsSuitable?: string;
+    parkingSpaces?: number;
     status: string;
     bedrooms: number;
     bathrooms: number;
@@ -117,7 +182,6 @@ interface ListingFormProps {
   amenities: Amenity[];
   mode?: "create" | "edit";
 }
-
 export function ListingForm({
   listing,
   amenities,
@@ -158,7 +222,33 @@ export function ListingForm({
     title: "",
     description: "",
     price: 0,
+    listingCategory: "rent",
     propertyType: "house",
+    landSize: undefined,
+    landSizeAcres: undefined,
+    landPurpose: undefined,
+    furnished: undefined,
+    depositAmount: undefined,
+    availableFrom: "",
+    petsAllowed: false,
+    titleDeedReady: false,
+    serviceCharge: undefined,
+    originalPrice: undefined,
+    openHouseDate: "",
+    maxGuests: undefined,
+    minNights: undefined,
+    cleaningFee: undefined,
+    checkInTime: "",
+    checkOutTime: "",
+    hasPool: false,
+    hasStaffQuarters: false,
+    hasGarden: false,
+    hasBackupPower: false,
+    roadAccess: undefined,
+    fenced: false,
+    waterSource: undefined,
+    cropsSuitable: "",
+    parkingSpaces: undefined,
     status: "active",
     bedrooms: 0,
     bathrooms: 0,
@@ -177,8 +267,36 @@ export function ListingForm({
       title: listing?.title || "",
       description: listing?.description || "",
       price: listing?.price || 0,
+      listingCategory:
+        (listing?.listingCategory as FormDataOutput["listingCategory"]) ||
+        "rent",
       propertyType:
         (listing?.propertyType as FormDataOutput["propertyType"]) || "house",
+      landSize: listing?.landSize as FormDataOutput["landSize"],
+      landSizeAcres: listing?.landSizeAcres,
+      landPurpose: listing?.landPurpose as FormDataOutput["landPurpose"],
+      furnished: listing?.furnished as FormDataOutput["furnished"],
+      depositAmount: listing?.depositAmount,
+      availableFrom: listing?.availableFrom?.slice(0, 10) || "",
+      petsAllowed: listing?.petsAllowed ?? false,
+      titleDeedReady: listing?.titleDeedReady ?? false,
+      serviceCharge: listing?.serviceCharge,
+      originalPrice: listing?.originalPrice,
+      openHouseDate: listing?.openHouseDate?.slice(0, 16) || "",
+      maxGuests: listing?.maxGuests,
+      minNights: listing?.minNights,
+      cleaningFee: listing?.cleaningFee,
+      checkInTime: listing?.checkInTime || "",
+      checkOutTime: listing?.checkOutTime || "",
+      hasPool: listing?.hasPool ?? false,
+      hasStaffQuarters: listing?.hasStaffQuarters ?? false,
+      hasGarden: listing?.hasGarden ?? false,
+      hasBackupPower: listing?.hasBackupPower ?? false,
+      roadAccess: listing?.roadAccess as FormDataOutput["roadAccess"],
+      fenced: listing?.fenced ?? false,
+      waterSource: listing?.waterSource as FormDataOutput["waterSource"],
+      cropsSuitable: listing?.cropsSuitable || "",
+      parkingSpaces: listing?.parkingSpaces,
       status: (listing?.status as FormDataOutput["status"]) || "active",
       bedrooms: listing?.bedrooms || 0,
       bathrooms: listing?.bathrooms || 0,
@@ -192,6 +310,17 @@ export function ListingForm({
     },
   });
 
+  const watchedPropertyType = form.watch("propertyType");
+  const watchedCategory = form.watch("listingCategory");
+  const showLandFields = isLandType(watchedPropertyType);
+  const showVillaFields = isVillaType(watchedPropertyType);
+  const showFarmlandFields = isFarmlandType(watchedPropertyType);
+  const showRentFields = watchedCategory === "rent";
+  const showSaleFields = watchedCategory === "sale";
+  const showAirbnbFields = watchedCategory === "airbnb";
+  const showServiceCharge =
+    showSaleFields &&
+    ["apartment", "condo", "townhouse"].includes(watchedPropertyType);
   // Handle address selection from autocomplete
   const handleAddressSelect = (address: AddressResult | null) => {
     if (address) {
@@ -236,27 +365,63 @@ export function ListingForm({
             },
           }));
 
+        const isLand = isLandType(data.propertyType);
+        const isVilla = isVillaType(data.propertyType);
+        const isFarm = isFarmlandType(data.propertyType);
+        const isRent = data.listingCategory === "rent";
+        const isSale = data.listingCategory === "sale";
+        const isAirbnb = data.listingCategory === "airbnb";
+
         const formData = {
           title: data.title,
           description: data.description,
           price: data.price,
+          listingCategory: data.listingCategory,
           propertyType: data.propertyType,
+          landSize: isLand ? data.landSize : undefined,
+          landSizeAcres: isLand ? data.landSizeAcres : undefined,
+          landPurpose: isLand ? data.landPurpose : undefined,
+          furnished: isRent && !isLand ? data.furnished : undefined,
+          depositAmount: isRent ? data.depositAmount : undefined,
+          availableFrom: isRent ? data.availableFrom || undefined : undefined,
+          petsAllowed: isRent && !isLand ? data.petsAllowed : undefined,
+          titleDeedReady: isSale || isLand ? data.titleDeedReady : undefined,
+          serviceCharge:
+            isSale &&
+            ["apartment", "condo", "townhouse"].includes(data.propertyType)
+              ? data.serviceCharge
+              : undefined,
+          originalPrice: isSale ? data.originalPrice : undefined,
+          openHouseDate: isSale ? data.openHouseDate || undefined : undefined,
+          maxGuests: isAirbnb ? data.maxGuests : undefined,
+          minNights: isAirbnb ? data.minNights : undefined,
+          cleaningFee: isAirbnb ? data.cleaningFee : undefined,
+          checkInTime: isAirbnb ? data.checkInTime || undefined : undefined,
+          checkOutTime: isAirbnb ? data.checkOutTime || undefined : undefined,
+          hasPool: isVilla ? data.hasPool : undefined,
+          hasStaffQuarters: isVilla ? data.hasStaffQuarters : undefined,
+          hasGarden: isVilla ? data.hasGarden : undefined,
+          hasBackupPower: isVilla ? data.hasBackupPower : undefined,
+          roadAccess: isLand ? data.roadAccess : undefined,
+          fenced: isLand ? data.fenced : undefined,
+          waterSource: isFarm ? data.waterSource : undefined,
+          cropsSuitable: isFarm ? data.cropsSuitable || undefined : undefined,
+          parkingSpaces: !isLand ? data.parkingSpaces : undefined,
           status: data.status,
-          bedrooms: data.bedrooms,
-          bathrooms: data.bathrooms,
-          squareFeet: data.squareFeet,
-          yearBuilt: data.yearBuilt,
+          bedrooms: isLand ? 0 : data.bedrooms,
+          bathrooms: isLand ? 0 : data.bathrooms,
+          squareFeet: isLand ? 0 : data.squareFeet,
+          yearBuilt: isLand ? undefined : data.yearBuilt,
           address: {
             street: data.street,
             city: data.city,
             state: data.state,
-            zipCode: data.zipCode,
+            zipCode: data.zipCode || "",
           },
           location,
           amenities: data.amenities,
           images: imageRefs,
         };
-
         if (mode === "edit" && listing) {
           await updateListing(listing._id, formData);
           toast.success("Listing updated successfully");
@@ -315,7 +480,10 @@ export function ListingForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-6">
+      <form
+        onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+        className="space-y-6"
+      >
         {submitError ? (
           <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             {submitError}
@@ -361,25 +529,33 @@ export function ListingForm({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="price"
+                name="listingCategory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Monthly Rent (Ksh)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder="450000"
-                        name={field.name}
-                        onBlur={field.onBlur}
-                        ref={field.ref}
-                        disabled={field.disabled}
-                        value={String(field.value ?? "")}
-                        onChange={(e) => field.onChange(e.target.value)}
-                      />
-                    </FormControl>
+                    <FormLabel>Listing Category</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Rent, sale, or Airbnb" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {LISTING_CATEGORIES.map((category) => (
+                          <SelectItem
+                            key={category.value}
+                            value={category.value}
+                          >
+                            {category.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -414,6 +590,237 @@ export function ListingForm({
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {watchedCategory === "sale"
+                      ? "Sale Price (KES)"
+                      : watchedCategory === "airbnb"
+                        ? "Nightly Rate (KES)"
+                        : "Monthly Rent (KES)"}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="45000"
+                      name={field.name}
+                      onBlur={field.onBlur}
+                      ref={field.ref}
+                      disabled={field.disabled}
+                      value={String(field.value ?? "")}
+                      onChange={(e) => field.onChange(e.target.value)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {showLandFields && (
+              <div className="space-y-4 rounded-xl border border-border/60 bg-muted/30 p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="landSize"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Land Size</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {LAND_SIZES.map((size) => (
+                              <SelectItem key={size.value} value={size.value}>
+                                {size.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="landSizeAcres"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Exact acres (optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            placeholder="e.g. 2.5"
+                            name={field.name}
+                            onBlur={field.onBlur}
+                            ref={field.ref}
+                            disabled={field.disabled}
+                            value={String(field.value ?? "")}
+                            onChange={(e) => field.onChange(e.target.value)}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="landPurpose"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Land Purpose</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Purpose" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {LAND_PURPOSES.map((purpose) => (
+                              <SelectItem
+                                key={purpose.value}
+                                value={purpose.value}
+                              >
+                                {purpose.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="roadAccess"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Road Access</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Access type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {ROAD_ACCESS_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="titleDeedReady"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-end gap-3 space-y-0 pb-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          Title deed ready
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="fenced"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-end gap-3 space-y-0 pb-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className="font-normal">
+                          Fenced / bordered
+                        </FormLabel>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                {showFarmlandFields && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="waterSource"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Water Source</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select source" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {WATER_SOURCE_OPTIONS.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cropsSuitable"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Crops / Use Suitable</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g. maize, dairy, horticulture"
+                              name={field.name}
+                              onBlur={field.onBlur}
+                              ref={field.ref}
+                              disabled={field.disabled}
+                              value={field.value ?? ""}
+                              onChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
             {mode === "edit" && (
               <FormField
                 control={form.control}
@@ -431,7 +838,7 @@ export function ListingForm({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {STATUS_OPTIONS.map((status) => (
+                        {LISTING_STATUSES.map((status) => (
                           <SelectItem key={status.value} value={status.value}>
                             {status.label}
                           </SelectItem>
@@ -460,18 +867,172 @@ export function ListingForm({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Property Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {!showLandFields && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Property Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <FormField
+                  control={form.control}
+                  name="bedrooms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bedrooms</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          disabled={field.disabled}
+                          value={String(field.value ?? "")}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="bathrooms"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bathrooms</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          disabled={field.disabled}
+                          value={String(field.value ?? "")}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="squareFeet"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Square Feet</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          disabled={field.disabled}
+                          value={String(field.value ?? "")}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="yearBuilt"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Year Built</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder="2020"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          disabled={field.disabled}
+                          value={String(field.value ?? "")}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="parkingSpaces"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parking Spaces</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          disabled={field.disabled}
+                          value={String(field.value ?? "")}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {showRentFields && !showLandFields && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Rental Details</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="bedrooms"
+                name="furnished"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bedrooms</FormLabel>
+                    <FormLabel>Furnishing</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select furnishing" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {FURNISHED_OPTIONS.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="depositAmount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Security Deposit (KES)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -488,18 +1049,62 @@ export function ListingForm({
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="bathrooms"
+                name="availableFrom"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Bathrooms</FormLabel>
+                    <FormLabel>Available From</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="date"
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="petsAllowed"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-end gap-3 space-y-0 pb-2">
+                    <FormControl>
+                      <Checkbox
+                        checked={!!field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="font-normal">Pets allowed</FormLabel>
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {showSaleFields && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Sale Details</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="originalPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Original Price (if reduced)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
                         min="0"
-                        step="0.5"
                         name={field.name}
                         onBlur={field.onBlur}
                         ref={field.ref}
@@ -512,13 +1117,130 @@ export function ListingForm({
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="squareFeet"
+                name="openHouseDate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Square Feet</FormLabel>
+                    <FormLabel>Open House / Viewing</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="datetime-local"
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {showServiceCharge && (
+                <FormField
+                  control={form.control}
+                  name="serviceCharge"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Service Charge (KES / month)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          name={field.name}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          disabled={field.disabled}
+                          value={String(field.value ?? "")}
+                          onChange={(e) => field.onChange(e.target.value)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {!showLandFields && (
+                <FormField
+                  control={form.control}
+                  name="titleDeedReady"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-end gap-3 space-y-0 pb-2">
+                      <FormControl>
+                        <Checkbox
+                          checked={!!field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        Title deed ready
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {showAirbnbFields && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Airbnb / Short Stay</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="maxGuests"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Max Guests</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={String(field.value ?? "")}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="minNights"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Minimum Nights</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        min="1"
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={String(field.value ?? "")}
+                        onChange={(e) => field.onChange(e.target.value)}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="cleaningFee"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cleaning Fee (KES)</FormLabel>
                     <FormControl>
                       <Input
                         type="number"
@@ -535,32 +1257,86 @@ export function ListingForm({
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="yearBuilt"
+                name="checkInTime"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Year Built</FormLabel>
+                    <FormLabel>Check-in Time</FormLabel>
                     <FormControl>
                       <Input
-                        type="number"
-                        placeholder="2020"
+                        type="time"
                         name={field.name}
                         onBlur={field.onBlur}
                         ref={field.ref}
                         disabled={field.disabled}
-                        value={String(field.value ?? "")}
-                        onChange={(e) => field.onChange(e.target.value)}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
-          </CardContent>
-        </Card>
+              <FormField
+                control={form.control}
+                name="checkOutTime"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Check-out Time</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="time"
+                        name={field.name}
+                        onBlur={field.onBlur}
+                        ref={field.ref}
+                        disabled={field.disabled}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {showVillaFields && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Luxury Villa Features</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {(
+                [
+                  ["hasPool", "Swimming pool"],
+                  ["hasStaffQuarters", "Staff quarters"],
+                  ["hasGarden", "Private garden"],
+                  ["hasBackupPower", "Backup power (generator / solar)"],
+                ] as const
+              ).map(([name, label]) => (
+                <FormField
+                  key={name}
+                  control={form.control}
+                  name={name}
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center gap-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={!!field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormLabel className="font-normal">{label}</FormLabel>
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>

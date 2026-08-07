@@ -4,8 +4,8 @@ This folder contains seed data and scripts to populate your Sanity database with
 
 ## Contents
 
-- **6 Agents** - House and landlord agent with bios, agencies, and profile photos
-- **25 Properties** - Listings across 10 cities with images, amenities, and locations
+- **6 Agents** - Local agent profiles with bios and agencies
+- **25 Properties** - Nyeri County listings across rent / sale / Airbnb, houses, apartments, villas, plots, and farmland (with category-specific fields)
 - **8 Users** - Sample users with saved listings
 - **15 Leads** - Buyer inquiries in various statuses
 
@@ -33,7 +33,7 @@ pnpm seed
 This will:
 1. Download images from Unsplash and upload to Sanity Assets
 2. Create agents with profile photos
-3. Create properties with images and agent references
+3. Create properties with images, listingCategory, and agent references
 4. Create users with saved listing references
 5. Create leads with property and agent references
 

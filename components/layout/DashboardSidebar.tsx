@@ -2,11 +2,14 @@
 
 import {
   ArrowLeft,
+  BarChart3,
   CreditCard,
+  FileSpreadsheet,
   Home,
   LayoutDashboard,
   ListPlus,
   MessageSquare,
+  ShieldCheck,
   User,
 } from "lucide-react";
 import Link from "next/link";
@@ -39,6 +42,18 @@ const navItems = [
     description: "Buyer inquiries",
   },
   {
+    href: "/dashboard/analytics",
+    label: "Analytics",
+    icon: BarChart3,
+    description: "Performance metrics",
+  },
+  {
+    href: "/dashboard/invoices",
+    label: "Invoices",
+    icon: FileSpreadsheet,
+    description: "Payments and receipts",
+  },
+  {
     href: "/dashboard/profile",
     label: "Agent Profile",
     icon: User,
@@ -52,13 +67,22 @@ const navItems = [
   },
 ];
 
-export function DashboardSidebar() {
+const adminNavItems = [
+  {
+    href: "/dashboard/admin/payments",
+    label: "Bank approvals",
+    icon: ShieldCheck,
+    description: "Verify bank transfers",
+  },
+];
+
+export function DashboardSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname();
+  const items = isAdmin ? [...navItems, ...adminNavItems] : navItems;
 
   return (
     <aside className="w-72 border-r border-border/50 bg-sidebar min-h-screen sticky top-0">
       <div className="p-6">
-        {/* Back Link */}
         <Link
           href="/"
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors mb-8 group"
@@ -67,10 +91,9 @@ export function DashboardSidebar() {
             className="h-4 w-4 transition-transform group-hover:-translate-x-1"
             aria-hidden="true"
           />
-          <span className="text-sm font-medium">Back to Nyeri Rentals</span>
+          <span className="text-sm font-medium">Back to GreenKey Realty</span>
         </Link>
 
-        {/* Dashboard Header */}
         <div className="mb-8">
           <h2 className="text-xl font-bold font-heading">Agent Dashboard</h2>
           <p className="text-sm text-muted-foreground mt-1">
@@ -78,16 +101,13 @@ export function DashboardSidebar() {
           </p>
         </div>
 
-        {/* Navigation */}
         <nav className="space-y-1" aria-label="Dashboard navigation">
-          {navItems.map((item) => {
-            // Check for exact match first
+          {items.map((item) => {
             const isExactMatch = pathname === item.href;
-            // For startsWith matching, ensure no other nav item is a more specific match
             const isStartsWithMatch =
               item.href !== "/dashboard" &&
               pathname.startsWith(item.href) &&
-              !navItems.some(
+              !items.some(
                 (other) =>
                   other.href !== item.href &&
                   other.href.startsWith(item.href) &&

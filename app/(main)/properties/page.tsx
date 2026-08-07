@@ -35,6 +35,9 @@ interface SearchParams {
   beds?: string;
   baths?: string;
   type?: string;
+  category?: string;
+  landPurpose?: string;
+  landSize?: string;
   city?: string;
   page?: string;
   // Advanced filters
@@ -79,6 +82,9 @@ export default async function PropertiesPage({
     baths: bathsNum,
     bathsIsPlus,
     type: params.type === "all" ? "" : params.type || "",
+    category: params.category === "all" ? "" : params.category || "",
+    landPurpose: params.landPurpose === "all" ? "" : params.landPurpose || "",
+    landSize: params.landSize === "all" ? "" : params.landSize || "",
     city: params.city?.toLowerCase() || "",
     // Advanced filters
     minSqft: Number(params.minSqft) || 0,
@@ -118,6 +124,9 @@ export default async function PropertiesPage({
     params.beds ||
     params.baths ||
     (params.type && params.type !== "all") ||
+    (params.category && params.category !== "all") ||
+    (params.landPurpose && params.landPurpose !== "all") ||
+    (params.landSize && params.landSize !== "all") ||
     params.city ||
     params.minSqft ||
     params.maxSqft ||
@@ -131,10 +140,9 @@ export default async function PropertiesPage({
     params.amenities;
 
   return (
-    <div className="min-h-screen bg-accent/20">
-      {/* Header */}
-      <div className="bg-background border-b border-border/50">
-        <div className="container py-8">
+    <div className="min-h-screen">
+      <div className="border-b border-border/60 bg-muted/30">
+        <div className="container py-10 md:py-12">
           <nav
             className="flex items-center gap-2 text-sm text-muted-foreground mb-4"
             aria-label="Breadcrumb"
@@ -145,11 +153,12 @@ export default async function PropertiesPage({
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
             <span className="text-foreground font-medium">Properties</span>
           </nav>
-          <h1 className="text-3xl md:text-4xl font-bold font-heading">
-            Browse Properties
+          <h1 className="text-3xl md:text-5xl font-heading font-semibold tracking-tight">
+            Browse homes in Nyeri
           </h1>
-          <p className="text-muted-foreground mt-2">
-            Find your perfect Rental from our curated selection
+          <p className="text-muted-foreground mt-3 max-w-xl">
+            Filter by price, rooms, and amenities — or switch to map view to
+            explore by location.
           </p>
         </div>
       </div>

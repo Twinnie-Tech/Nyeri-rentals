@@ -1,0 +1,249 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  AGENT
+  ADMIN
+}
+
+enum SubscriptionStatus {
+  NONE
+  PENDING
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentMethod {
+  MPESA
+  BANK
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum ListingCategory {
+  rent
+  sale
+  airbnb
+}
+
+enum PropertyType {
+  house
+  apartment
+  bedsitter
+  condo
+  townhouse
+  villa
+  land
+  farmland
+}
+
+enum ListingStatus {
+  active
+  pending
+  sold
+  rented
+  draft
+}
+
+enum LeadStatus {
+  new
+  contacted
+  qualified
+  closed
+  archived
+}
+
+model User {
+  id                   String    @id @default(cuid())
+  phone                String?   @unique
+  email                String?   @unique
+  passwordHash         String?
+  name                 String?
+  photoUrl             String?
+  roles                Role[]    @default([USER])
+  onboardingComplete   Boolean   @default(false)
+  phoneVerifiedAt      DateTime?
+  emailVerifiedAt      DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  refreshTokens        RefreshToken[]
+  agent                Agent?
+  subscription         Subscription?
+  payments             Payment[]
+  savedListings        SavedListing[]
+  leadsAsBuyer         Lead[]         @relation("BuyerLeads")
+  properties           PropertyMirror[]
+
+  @@index([email])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  userAgent String?
+  ip        String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Agent {
+  id                   String   @id @default(cuid())
+  userId               String   @unique
+  name                 String
+  email                String
+  phone                String?
+  bio                  String?
+  licenseNumber        String?
+  agency               String?
+  photoUrl             String?
+  sanityId             String?  @unique
+  onboardingComplete   Boolean  @default(false)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties PropertyMirror[]
+  leads      Lead[]
+
+  @@index([sanityId])
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  planCode             String             @default("agent")
+  status               SubscriptionStatus @default(NONE)
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  method            PaymentMethod
+  status            PaymentStatus @default(PENDING)
+  amountKes         Int
+  currency          String        @default("KES")
+  planCode          String        @default("agent")
+  phone             String?
+  mpesaCheckoutId   String?       @unique
+  mpesaReceipt      String?
+  mpesaMerchantReq  String?
+  bankReference     String?
+  bankProofUrl      String?
+  idempotencyKey    String?       @unique
+  metadata          Json?
+  verifiedByAdminId String?
+  verifiedAt        DateTime?
+  failureReason     String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([mpesaCheckoutId])
+}
+
+model PropertyMirror {
+  id              String          @id @default(cuid())
+  sanityId        String          @unique
+  agentId         String?
+  ownerUserId     String?
+  title           String
+  slug            String?
+  description     String?
+  listingCategory ListingCategory
+  propertyType    PropertyType
+  status          ListingStatus   @default(draft)
+  price           Int?
+  bedrooms        Int?
+  bathrooms       Int?
+  squareFeet      Int?
+  yearBuilt       Int?
+  street          String?
+  city            String?
+  county          String?
+  zipCode         String?
+  latitude        Float?
+  longitude       Float?
+  amenities       String[]        @default([])
+  /// Image refs as stored from the listing form: [{ _key, assetRef }]
+  images          Json?
+  /// Category-specific and other listing fields (rent/sale/airbnb/land/villa packs)
+  details         Json?
+  publishedAt     DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  agent   Agent?         @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  owner   User?          @relation(fields: [ownerUserId], references: [id], onDelete: SetNull)
+  leads   Lead[]
+  savedBy SavedListing[]
+
+  @@index([listingCategory, propertyType, status])
+  @@index([agentId])
+  @@index([city])
+}
+
+model SavedListing {
+  id         String   @id @default(cuid())
+  userId     String
+  propertyId String
+  createdAt  DateTime @default(now())
+
+  user     User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property PropertyMirror @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, propertyId])
+  @@index([userId])
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  propertyId   String?
+  agentId      String?
+  buyerUserId  String?
+  name         String
+  email        String?
+  phone        String
+  message      String?
+  status       LeadStatus @default(new)
+  sanityId     String?    @unique
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  property PropertyMirror? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  agent    Agent?          @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  buyer    User?           @relation("BuyerLeads", fields: [buyerUserId], references: [id], onDelete: SetNull)
+
+  @@index([agentId, status])
+  @@index([propertyId])
+}

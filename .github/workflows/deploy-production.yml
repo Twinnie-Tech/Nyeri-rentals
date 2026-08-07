@@ -1,0 +1,73 @@
+# Production deploy — push/merge to main (requires approval on Environment "production")
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  ci-gate:
+    name: Wait for CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm --filter @greenkey/api exec prisma generate
+      - run: pnpm --filter @greenkey/api build
+      - name: Build API Docker image
+        run: docker build -f Dockerfile.api -t greenkey-api:prod .
+
+  railway-api:
+    name: Railway API (production)
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      - name: Deploy API to Railway production
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE_ID: ${{ secrets.RAILWAY_SERVICE_ID }}
+          RAILWAY_ENVIRONMENT_ID: ${{ secrets.RAILWAY_ENVIRONMENT_ID }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then
+            echo "RAILWAY_TOKEN not set — skip CLI deploy."
+            echo "Use Railway GitHub integration (branch main → production) instead."
+            exit 0
+          fi
+          railway up --service "$RAILWAY_SERVICE_ID" --environment "$RAILWAY_ENVIRONMENT_ID" --detach
+
+  vercel-note:
+    name: Vercel (production)
+    needs: ci-gate
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Confirm Vercel production deploy
+        run: |
+          echo "Vercel should auto-deploy main → Production."
+          if [ -n "${{ secrets.VERCEL_TOKEN }}" ]; then
+            npm install -g vercel
+            vercel pull --yes --environment=production --token="${{ secrets.VERCEL_TOKEN }}"
+            vercel deploy --prebuilt=false --prod --token="${{ secrets.VERCEL_TOKEN }}"
+          else
+            echo "No VERCEL_TOKEN — relying on Vercel auto-deploy from GitHub."
+          fi
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}

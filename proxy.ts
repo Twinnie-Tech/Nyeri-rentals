@@ -1,94 +1,168 @@
-import {
-  clerkClient,
-  clerkMiddleware,
-  createRouteMatcher,
-} from "@clerk/nextjs/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/api/constants";
 
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/saved(.*)",
-  "/profile(.*)",
-]);
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  "http://localhost:4000/v1";
 
-const isOnboardingRoute = createRouteMatcher(["/onboarding(.*)"]);
+type MeResponse = {
+  id: string;
+  onboardingComplete: boolean;
+  roles: string[];
+  agent?: { onboardingComplete: boolean } | null;
+  subscription?: {
+    status: string;
+    currentPeriodEnd: string | null;
+  } | null;
+};
 
-const isAgentRoute = createRouteMatcher(["/dashboard(.*)"]);
+type TokenPair = {
+  accessToken: string;
+  refreshToken: string;
+};
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/properties(.*)",
-  "/pricing(.*)",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/studio(.*)",
-]);
+function isPublicPath(pathname: string) {
+  if (pathname === "/") return true;
+  return (
+    pathname.startsWith("/properties") ||
+    pathname.startsWith("/pricing") ||
+    pathname.startsWith("/sign-in") ||
+    pathname.startsWith("/sign-up") ||
+    pathname.startsWith("/studio") ||
+    pathname.startsWith("/api/")
+  );
+}
 
-export default clerkMiddleware(async (auth, req) => {
-  const { userId, has } = await auth();
+function hasActivePlan(user: MeResponse) {
+  if (user.roles?.includes("ADMIN")) return true;
+  const sub = user.subscription;
+  if (!sub || sub.status !== "ACTIVE") return false;
+  if (!sub.currentPeriodEnd) return true;
+  return new Date(sub.currentPeriodEnd) > new Date();
+}
 
-  // Allow public routes
-  if (isPublicRoute(req)) {
+function applyAuthCookies(res: NextResponse, tokens: TokenPair) {
+  const isProd = process.env.NODE_ENV === "production";
+  res.cookies.set(ACCESS_COOKIE, tokens.accessToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 15,
+  });
+  res.cookies.set(REFRESH_COOKIE, tokens.refreshToken, {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+}
+
+async function fetchMe(accessToken: string): Promise<MeResponse | null> {
+  try {
+    const res = await fetch(`${API_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as MeResponse;
+  } catch {
+    return null;
+  }
+}
+
+async function refreshTokens(refreshToken: string): Promise<TokenPair | null> {
+  try {
+    const res = await fetch(`${API_URL}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as TokenPair;
+    if (!data.accessToken || !data.refreshToken) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function redirectSignIn(req: NextRequest) {
+  const signIn = new URL("/sign-in", req.url);
+  signIn.searchParams.set("redirect_url", req.url);
+  return NextResponse.redirect(signIn);
+}
+
+export default async function proxy(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
 
-  // Protect routes that require authentication
-  if ((isProtectedRoute(req) || isOnboardingRoute(req)) && !userId) {
-    const signInUrl = new URL("/sign-in", req.url);
-    signInUrl.searchParams.set("redirect_url", req.url);
-    return NextResponse.redirect(signInUrl);
+  let access = req.cookies.get(ACCESS_COOKIE)?.value;
+  const refresh = req.cookies.get(REFRESH_COOKIE)?.value;
+  let rotated: TokenPair | null = null;
+
+  if (!access && !refresh) {
+    return redirectSignIn(req);
   }
 
-  // Check onboarding status for authenticated users on protected routes
-  if (userId && isProtectedRoute(req)) {
-    const clerk = await clerkClient();
-    const user = await clerk.users.getUser(userId);
-    const onboardingComplete = user.publicMetadata?.onboardingComplete;
-    if (!onboardingComplete) {
-      return NextResponse.redirect(new URL("/onboarding", req.url));
+  let user = access ? await fetchMe(access) : null;
+
+  if (!user && refresh) {
+    rotated = await refreshTokens(refresh);
+    if (rotated) {
+      access = rotated.accessToken;
+      user = await fetchMe(access);
     }
   }
 
-  // If user has completed onboarding but visits /onboarding, redirect to home
-  if (userId && isOnboardingRoute(req)) {
-    const clerk = await clerkClient();
-    const user = await clerk.users.getUser(userId);
-    const onboardingComplete = user.publicMetadata?.onboardingComplete;
-    if (onboardingComplete) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
+  if (!user) {
+    return redirectSignIn(req);
   }
 
-  // Agent routes require active subscription + completed agent onboarding
-  if (isAgentRoute(req) && userId) {
-    const hasAgentPlan = has({ plan: "agent" });
-    if (!hasAgentPlan) {
-      return NextResponse.redirect(new URL("/pricing", req.url));
-    }
+  const isOnboarding = pathname.startsWith("/onboarding");
+  const isProtected =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/saved") ||
+    pathname.startsWith("/profile");
 
-    // Check agent onboarding status (stored in Clerk metadata)
-    const clerk = await clerkClient();
-    const user = await clerk.users.getUser(userId);
-    const agentOnboardingComplete =
-      user.publicMetadata?.agentOnboardingComplete;
+  let response = NextResponse.next();
 
-    // If not onboarded, redirect to agent onboarding (unless already there)
-    if (
-      !agentOnboardingComplete &&
-      !req.nextUrl.pathname.startsWith("/dashboard/onboarding")
+  if (isProtected && !user.onboardingComplete) {
+    response = NextResponse.redirect(new URL("/onboarding", req.url));
+  } else if (isOnboarding && user.onboardingComplete) {
+    response = NextResponse.redirect(new URL("/", req.url));
+  } else if (pathname.startsWith("/dashboard")) {
+    const isAdmin = user.roles?.includes("ADMIN");
+    if (!hasActivePlan(user)) {
+      response = NextResponse.redirect(new URL("/pricing", req.url));
+    } else if (
+      !isAdmin &&
+      !user.agent?.onboardingComplete &&
+      !pathname.startsWith("/dashboard/onboarding")
     ) {
-      return NextResponse.redirect(new URL("/dashboard/onboarding", req.url));
+      response = NextResponse.redirect(
+        new URL("/dashboard/onboarding", req.url),
+      );
     }
   }
 
-  return NextResponse.next();
-});
+  if (rotated) {
+    applyAuthCookies(response, rotated);
+  }
+
+  return response;
+}
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
     "/(api|trpc)(.*)",
   ],
 };

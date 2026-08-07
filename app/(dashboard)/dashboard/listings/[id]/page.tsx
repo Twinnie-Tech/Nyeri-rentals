@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ListingForm } from "@/components/forms/ListingForm";
+import { getSessionUser } from "@/lib/api/session";
 import { sanityFetch } from "@/lib/sanity/live";
 import {
   AGENT_ID_BY_USER_QUERY,
@@ -16,7 +16,9 @@ export default async function EditListingPage({
   const { id } = await params;
 
   // Middleware guarantees: authenticated + has agent plan + onboarding complete
-  const { userId } = await auth();
+  const session = await getSessionUser();
+  if (!session) redirect("/sign-in");
+  const userId = session.id;
 
   const [{ data: agent }, { data: listing }, { data: amenities }] =
     await Promise.all([

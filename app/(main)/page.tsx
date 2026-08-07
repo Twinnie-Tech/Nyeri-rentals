@@ -1,363 +1,498 @@
 import {
   ArrowRight,
+  Building2,
+  Fence,
   Heart,
   Home,
   MapPin,
-  Search,
   Shield,
-  Users,
+  Sprout,
+  Trees,
+  Upload,
+  Warehouse,
 } from "lucide-react";
 import Link from "next/link";
+import { CategoryEmptyState } from "@/components/home/CategoryEmptyState";
+import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { PropertyGrid } from "@/components/property/PropertyGrid";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PROPERTY_TYPES } from "@/lib/property-categories";
 import { sanityFetch } from "@/lib/sanity/live";
-import { FEATURED_PROPERTIES_QUERY } from "@/lib/sanity/queries";
+import {
+  FEATURED_PROPERTIES_QUERY,
+  PROPERTIES_BY_CATEGORY_QUERY,
+} from "@/lib/sanity/queries";
+import type { Property } from "@/types";
+
+const MARKET_CATEGORIES = [
+  {
+    title: "Homes for rent",
+    description: "Monthly rentals for families, students, and professionals",
+    href: "/properties?category=rent",
+    icon: Home,
+  },
+  {
+    title: "Homes for sale",
+    description: "Buy a house, apartment, or townhouse in Nyeri",
+    href: "/properties?category=sale",
+    icon: Building2,
+  },
+  {
+    title: "Airbnb stays",
+    description: "Short stays and guest houses for visitors",
+    href: "/properties?category=airbnb",
+    icon: Warehouse,
+  },
+  {
+    title: "Luxury villas",
+    description: "Featured high-end villas across Nyeri County",
+    href: "/properties?type=villa",
+    icon: Trees,
+  },
+  {
+    title: "Plots & land",
+    description: "1/4, 1/2, and acre plots for residential or commercial use",
+    href: "/properties?type=land",
+    icon: Fence,
+  },
+  {
+    title: "Farmland",
+    description: "Agricultural land in Nyeri’s farming heartland",
+    href: "/properties?type=farmland&landPurpose=agricultural",
+    icon: Sprout,
+  },
+];
+
+const NEIGHBORHOODS = [
+  { name: "Nyeri Town", query: "Nyeri", hint: "Central living" },
+  { name: "Karatina", query: "Karatina", hint: "Quiet & green" },
+  { name: "Othaya", query: "Othaya", hint: "Family homes" },
+  { name: "Mukurwe-ini", query: "Mukurwe", hint: "Affordable finds" },
+];
 
 export default async function HomePage() {
-  const { data: featuredProperties } = await sanityFetch({
-    query: FEATURED_PROPERTIES_QUERY,
-  });
+  const [
+    { data: featuredProperties },
+    { data: rentals },
+    { data: forSale },
+    { data: airbnb },
+    { data: villas },
+    { data: plots },
+    { data: farmland },
+  ] = await Promise.all([
+    sanityFetch({ query: FEATURED_PROPERTIES_QUERY }),
+    sanityFetch({
+      query: PROPERTIES_BY_CATEGORY_QUERY,
+      params: { category: "rent", type: "", limit: 3 },
+    }),
+    sanityFetch({
+      query: PROPERTIES_BY_CATEGORY_QUERY,
+      params: { category: "sale", type: "", limit: 3 },
+    }),
+    sanityFetch({
+      query: PROPERTIES_BY_CATEGORY_QUERY,
+      params: { category: "airbnb", type: "", limit: 3 },
+    }),
+    sanityFetch({
+      query: PROPERTIES_BY_CATEGORY_QUERY,
+      params: { category: "", type: "villa", limit: 3 },
+    }),
+    sanityFetch({
+      query: PROPERTIES_BY_CATEGORY_QUERY,
+      params: { category: "", type: "land", limit: 3 },
+    }),
+    sanityFetch({
+      query: PROPERTIES_BY_CATEGORY_QUERY,
+      params: { category: "", type: "farmland", limit: 3 },
+    }),
+  ]);
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-accent via-accent/50 to-background py-24 md:py-32 lg:py-40">
-        {/* Decorative Elements */}
-        <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-          <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -bottom-1/2 -left-1/4 w-[600px] h-[600px] rounded-full bg-secondary/10 blur-3xl" />
-        </div>
+      <HeroCarousel />
 
-        <div className="container relative">
-          <div className="max-w-3xl mx-auto text-center">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              <Home className="h-4 w-4" aria-hidden="true" />
-              <span>Perfect for First-Time Nyeri Residents</span>
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold font-heading tracking-tight mb-6">
-              Find Your <span className="text-primary">Perfect Rental</span>
-            </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-              Making house hunting stress-free. Browse
-              curated rentals, save your favorites, and connect with trusted
-              agents.
-            </p>
-
-            {/* Search Bar */}
-            <form
-              action="/properties"
-              method="GET"
-              className="flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto"
-            >
-              <div className="flex-1 relative">
-                <label htmlFor="city-search" className="sr-only">
-                  Search by city, neighborhood, or ZIP code
-                </label>
-                <MapPin
-                  className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <Input
-                  id="city-search"
-                  name="city"
-                  placeholder="Enter city, neighborhood, or ZIP…"
-                  autoComplete="address-level2"
-                  className="h-14 pl-12 text-base"
-                />
-              </div>
-              <Button type="submit" size="xl" className="h-14">
-                <Search className="h-5 w-5" aria-hidden="true" />
-                <span className="ml-2">Search Rentals</span>
-              </Button>
-            </form>
-
-            {/* Quick Stats */}
-            <div className="flex flex-wrap items-center justify-center gap-8 mt-12 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-2 w-2 rounded-full bg-success"
-                  aria-hidden="true"
-                />
-                <span>1,000+ Active Listings</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-2 w-2 rounded-full bg-primary"
-                  aria-hidden="true"
-                />
-                <span>500+ Happy Homeowners</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div
-                  className="h-2 w-2 rounded-full bg-secondary"
-                  aria-hidden="true"
-                />
-                <span>50+ Trusted Agents</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Featured Listings */}
-      <section className="py-20 md:py-28">
+      <section className="py-14 md:py-16 border-b border-border/60">
         <div className="container">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold font-heading">
-                Featured Rentals
-              </h2>
-              <p className="text-muted-foreground mt-2">
-                Hand-picked homes curated just for you
-              </p>
-            </div>
-            <Button variant="outline" asChild className="w-fit">
-              <Link href="/properties">
-                View All Properties
-                <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-              </Link>
-            </Button>
-          </div>
-
-          {featuredProperties && featuredProperties.length > 0 ? (
-            <PropertyGrid properties={featuredProperties} />
-          ) : (
-            <div className="text-center py-16 bg-accent/50 rounded-2xl border border-border/50">
-              <Home
-                className="h-12 w-12 text-muted-foreground mx-auto mb-4"
-                aria-hidden="true"
-              />
-              <p className="text-muted-foreground text-lg">
-                No featured rentals available at the moment.
-              </p>
-              <Button variant="outline" asChild className="mt-4">
-                <Link href="/properties">Browse All Rentals</Link>
-              </Button>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="py-20 md:py-28 bg-accent/30">
-        <div className="container">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold font-heading">
-              How Nyeri Rentals Works
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-heading font-semibold">
+              Explore by category
             </h2>
-            <p className="text-muted-foreground mt-3 max-w-2xl mx-auto">
-              Finding house has never been easier. Follow these simple
-              steps to start your journey.
+            <p className="text-muted-foreground mt-2">
+              Whether you want to rent, buy, host guests, or invest in land
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-            {/* Step 1 */}
-            <div className="relative text-center group">
-              <div className="w-20 h-20 bg-background border-2 border-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-warm transition-[transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:shadow-warm-md group-hover:border-primary/40">
-                <Search className="h-9 w-9 text-primary" aria-hidden="true" />
-              </div>
-              <div
-                className="absolute top-10 left-[60%] right-0 h-px bg-border hidden md:block"
-                aria-hidden="true"
-              />
-              <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-3">
-                Step 1
-              </span>
-              <h3 className="text-xl font-semibold font-heading mb-3">
-                Search Rentals
-              </h3>
-              <p className="text-muted-foreground">
-                Browse our curated catalog with advanced filters, map view, and
-                neighborhood insights.
-              </p>
-            </div>
-
-            {/* Step 2 */}
-            <div className="relative text-center group">
-              <div className="w-20 h-20 bg-background border-2 border-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-warm transition-[transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:shadow-warm-md group-hover:border-secondary/40">
-                <Heart className="h-9 w-9 text-secondary" aria-hidden="true" />
-              </div>
-              <div
-                className="absolute top-10 left-[60%] right-0 h-px bg-border hidden md:block"
-                aria-hidden="true"
-              />
-              <span className="inline-block px-3 py-1 rounded-full bg-secondary/10 text-secondary-foreground text-sm font-medium mb-3">
-                Step 2
-              </span>
-              <h3 className="text-xl font-semibold font-heading mb-3">
-                Save Favorites
-              </h3>
-              <p className="text-muted-foreground">
-                Save rentals you love and compare them side by side to find
-                your perfect match.
-              </p>
-            </div>
-
-            {/* Step 3 */}
-            <div className="relative text-center group">
-              <div className="w-20 h-20 bg-background border-2 border-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-warm transition-[transform,box-shadow] duration-300 group-hover:-translate-y-1 group-hover:shadow-warm-md group-hover:border-primary/40">
-                <Users className="h-9 w-9 text-primary" aria-hidden="true" />
-              </div>
-              <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-3">
-                Step 3
-              </span>
-              <h3 className="text-xl font-semibold font-heading mb-3">
-                Connect with Agents
-              </h3>
-              <p className="text-muted-foreground">
-                Reach out to trusted agents, schedule viewings, and get expert
-                guidance throughout your journey.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust Section */}
-      <section className="py-20 md:py-28">
-        <div className="container">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-            <div>
-              <span className="inline-block px-3 py-1 rounded-full bg-secondary/10 text-secondary-foreground text-sm font-medium mb-4">
-                Why Choose Nyeri Rentals
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold font-heading mb-6">
-                Built for First-Time Nyeri County Residence
-              </h2>
-              <p className="text-lg text-muted-foreground mb-8">
-                We understand that finding a good rental house can be overwhelming.
-                That&apos;s why we&apos;ve designed Nyeri Rentals to make the process
-                as simple and stress-free as possible.
-              </p>
-
-              <div className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Shield
-                      className="h-6 w-6 text-primary"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold font-heading mb-1">
-                      Verified Listings
-                    </h3>
-                    <p className="text-muted-foreground text-sm">
-                      Every rental is verified by our team to ensure accuracy
-                      and quality.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
-                    <Users
-                      className="h-6 w-6 text-secondary"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold font-heading mb-1">
-                      Trusted Agents
-                    </h3>
-                    <p className="text-muted-foreground text-sm">
-                      Connect with houses agents and landloards
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <Heart
-                      className="h-6 w-6 text-primary"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold font-heading mb-1">
-                      Personalized Experience
-                    </h3>
-                    <p className="text-muted-foreground text-sm">
-                      Save favorites and  get recommendations
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Stats Card */}
-            <div className="bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-8 md:p-12 text-primary-foreground">
-              <h3 className="text-2xl md:text-3xl font-bold font-heading mb-8">
-                Trusted by Thousands
-              </h3>
-              <div className="grid grid-cols-2 gap-8">
-                <div>
-                  <div className="text-4xl md:text-5xl font-bold tabular-nums mb-2">
-                    100+
-                  </div>
-                  <p className="text-primary-foreground/80">Happy tenants</p>
-                </div>
-                <div>
-                  <div className="text-4xl md:text-5xl font-bold tabular-nums mb-2">
-                    100+
-                  </div>
-                  <p className="text-primary-foreground/80">Active Listings</p>
-                </div>
-                <div>
-                  <div className="text-4xl md:text-5xl font-bold tabular-nums mb-2">
-                    20+
-                  </div>
-                  <p className="text-primary-foreground/80">Trusted Agents</p>
-                </div>
-                <div>
-                  <div className="text-4xl md:text-5xl font-bold tabular-nums mb-2">
-                    4.9
-                  </div>
-                  <p className="text-primary-foreground/80">Average Rating</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA - Become an Agent */}
-      <section className="py-20 md:py-28 bg-accent/30">
-        <div className="container">
-          <div className="bg-gradient-to-r from-secondary/90 to-secondary rounded-3xl p-8 md:p-12 lg:p-16">
-            <div className="max-w-3xl">
-              <h2 className="text-3xl md:text-4xl font-bold font-heading mb-4 text-secondary-foreground">
-                Are You a House or Landlord Agent?
-              </h2>
-              <p className="text-lg text-secondary-foreground/80 mb-8">
-                Join our platform to list properties, connect with motivated
-                buyers, and grow your business. Get started with our agent
-                subscription today.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" asChild>
-                  <Link href="/pricing">
-                    View Pricing Plans
-                    <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
-                  </Link>
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  asChild
-                  className="bg-background/10 border-secondary-foreground/20 text-secondary-foreground hover:bg-background/20"
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {MARKET_CATEGORIES.map((item) => {
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="group rounded-2xl border border-border bg-card p-6 shadow-warm transition-[transform,border-color] duration-300 hover:-translate-y-1 hover:border-primary/30"
                 >
-                  <Link href="/dashboard">Go to Agent Dashboard</Link>
-                </Button>
-              </div>
+                  <Icon
+                    className="h-6 w-6 text-primary mb-4"
+                    aria-hidden="true"
+                  />
+                  <h3 className="font-heading text-xl font-semibold mb-1">
+                    {item.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {item.description}
+                  </p>
+                </Link>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap gap-3 mt-8">
+            {PROPERTY_TYPES.map((item) => (
+              <Link
+                key={item.value}
+                href={`/properties?type=${item.value}`}
+                className="inline-flex items-center rounded-full border border-border bg-background px-4 py-2 text-sm font-medium hover:bg-accent transition-colors"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 md:py-28">
+        <div className="container space-y-16">
+          <CategoryStrip
+            title="Featured listings"
+            subtitle="Hand-picked homes, stays, and land across Nyeri"
+            href="/properties"
+            properties={featuredProperties}
+            empty={{
+              title: "No featured listings yet",
+              description:
+                "When agents mark listings as featured, they will appear here for renters and buyers browsing GreenKey Realty.",
+              tips: [
+                "Agents can create a listing and toggle Featured in Sanity or when editing later.",
+                "Browse all active listings while this section fills up.",
+              ],
+              browseHref: "/properties",
+              browseLabel: "Browse all listings",
+              relatedLinks: [
+                { href: "/properties?category=rent", label: "For rent" },
+                { href: "/properties?category=sale", label: "For sale" },
+                { href: "/pricing", label: "Become an agent" },
+              ],
+            }}
+          />
+          <CategoryStrip
+            title="For rent"
+            subtitle="Monthly homes ready for tenants"
+            href="/properties?category=rent"
+            properties={rentals}
+            empty={{
+              title: "No rentals listed yet",
+              description:
+                "This section shows houses, apartments, and bedsitters available for monthly rent across Nyeri County.",
+              tips: [
+                "Agents: choose Listing Category → For Rent when uploading.",
+                "Include photos, monthly price, bedrooms, and map location.",
+                "Tenants can save favorites and contact agents from each listing.",
+              ],
+              browseHref: "/properties?category=rent",
+              browseLabel: "Open rentals filter",
+              relatedLinks: [
+                {
+                  href: "/properties?type=apartment&category=rent",
+                  label: "Apartments",
+                },
+                { href: "/properties?category=airbnb", label: "Airbnb stays" },
+                { href: "/dashboard/listings/new", label: "List a rental" },
+              ],
+            }}
+          />
+          <CategoryStrip
+            title="For sale"
+            subtitle="Properties available to buy"
+            href="/properties?category=sale"
+            properties={forSale}
+            empty={{
+              title: "No homes for sale yet",
+              description:
+                "Sale listings cover houses, apartments, townhouses, and villas ready for purchase in Nyeri.",
+              tips: [
+                "Agents: set Listing Category → For Sale and enter the full sale price.",
+                "Add clear photos and land or house details to attract serious buyers.",
+              ],
+              browseHref: "/properties?category=sale",
+              browseLabel: "Open for-sale filter",
+              relatedLinks: [
+                { href: "/properties?type=villa", label: "Villas" },
+                { href: "/properties?type=land", label: "Plots" },
+                { href: "/pricing", label: "List with us" },
+              ],
+            }}
+          />
+          <CategoryStrip
+            title="Airbnb & short stays"
+            subtitle="Guest-ready spaces for visitors"
+            href="/properties?category=airbnb"
+            properties={airbnb}
+            empty={{
+              title: "No Airbnb stays yet",
+              description:
+                "Short-stay hosts can list furnished homes and guest houses with a nightly rate for visitors to Nyeri.",
+              tips: [
+                "Agents/hosts: choose Listing Category → Airbnb / Short stay.",
+                "Price should be the nightly rate; add amenities guests care about (Wi‑Fi, parking, kitchen).",
+                "Great for tourists, weekend trips, and business travel.",
+              ],
+              browseHref: "/properties?category=airbnb",
+              browseLabel: "Open Airbnb filter",
+              relatedLinks: [
+                { href: "/properties?category=rent", label: "Monthly rentals" },
+                { href: "/dashboard/listings/new", label: "Host a stay" },
+              ],
+            }}
+          />
+          <CategoryStrip
+            title="Luxury villas"
+            subtitle="Standout villas for lifestyle living"
+            href="/properties?type=villa"
+            properties={villas}
+            empty={{
+              title: "No villas published yet",
+              description:
+                "Villa listings highlight premium homes — for sale, for rent, or as exclusive short stays.",
+              tips: [
+                "When uploading, set Property Type → Villa.",
+                "Pair with rent, sale, or Airbnb depending on how you want to market it.",
+                "High-quality exterior and interior photos help this section shine.",
+              ],
+              browseHref: "/properties?type=villa",
+              browseLabel: "Open villas filter",
+              relatedLinks: [
+                { href: "/properties?category=sale", label: "For sale" },
+                { href: "/properties?category=airbnb", label: "Short stays" },
+              ],
+            }}
+          />
+          <CategoryStrip
+            title="Plots & land"
+            subtitle="1/4, 1/2, and acre plots for building or business"
+            href="/properties?type=land"
+            properties={plots}
+            empty={{
+              title: "No plots listed yet",
+              description:
+                "Plot listings are for residential or commercial land — including 1/4 acre, 1/2 acre, and full acres.",
+              tips: [
+                "Property Type → Plot / Land, then choose land size and purpose.",
+                "Pin the exact map location so buyers can assess access and surroundings.",
+                "Usually listed under For Sale with a clear price.",
+              ],
+              browseHref: "/properties?type=land",
+              browseLabel: "Open plots filter",
+              relatedLinks: [
+                {
+                  href: "/properties?type=land&landPurpose=residential",
+                  label: "Residential plots",
+                },
+                {
+                  href: "/properties?type=land&landPurpose=commercial",
+                  label: "Commercial plots",
+                },
+                { href: "/properties?type=farmland", label: "Farmland" },
+              ],
+            }}
+          />
+          <CategoryStrip
+            title="Farmland"
+            subtitle="Agricultural land in Nyeri’s farming heartland"
+            href="/properties?type=farmland&landPurpose=agricultural"
+            properties={farmland}
+            empty={{
+              title: "No farmland listed yet",
+              description:
+                "Farmland listings help buyers find agricultural acreage for crops, dairy, tea, coffee, and mixed farming.",
+              tips: [
+                "Property Type → Farmland and Land Purpose → Agricultural.",
+                "Note size in acres and describe water access, roads, and current use.",
+                "Drone-style photos and map pins help buyers understand the parcel.",
+              ],
+              browseHref: "/properties?type=farmland&landPurpose=agricultural",
+              browseLabel: "Open farmland filter",
+              relatedLinks: [
+                { href: "/properties?type=land", label: "Plots" },
+                { href: "/properties?category=sale", label: "For sale" },
+                { href: "/dashboard/listings/new", label: "List farmland" },
+              ],
+            }}
+          />
+        </div>
+      </section>
+
+      <section className="py-20 md:py-24 bg-primary text-primary-foreground relative overflow-hidden">
+        <div
+          className="absolute inset-0 surface-grid opacity-40"
+          aria-hidden="true"
+        />
+        <div className="container relative">
+          <div className="max-w-2xl mb-12">
+            <h2 className="text-3xl md:text-4xl font-heading font-semibold">
+              Explore neighborhoods
+            </h2>
+            <p className="mt-3 text-primary-foreground/75">
+              Jump into popular towns and farming areas across Nyeri County.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {NEIGHBORHOODS.map((place) => (
+              <Link
+                key={place.name}
+                href={`/properties?city=${encodeURIComponent(place.query)}`}
+                className="group rounded-2xl border border-primary-foreground/15 bg-primary-foreground/5 p-6 transition-[background-color,transform] duration-300 hover:bg-primary-foreground/10 hover:-translate-y-1"
+              >
+                <MapPin
+                  className="h-5 w-5 text-secondary mb-4"
+                  aria-hidden="true"
+                />
+                <h3 className="font-heading text-xl font-semibold mb-1">
+                  {place.name}
+                </h3>
+                <p className="text-sm text-primary-foreground/70">
+                  {place.hint}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="py-20 md:py-28 bg-muted/50">
+        <div className="container grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-heading font-semibold mb-5">
+              Built for people looking for a place — and people listing one
+            </h2>
+            <p className="text-muted-foreground text-lg mb-8">
+              Search rentals, sales, Airbnb stays, villas, plots, and farmland
+              with clear filters and direct agent contact.
+            </p>
+            <ul className="space-y-5">
+              <li className="flex gap-4">
+                <Shield className="h-6 w-6 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold font-heading mb-1">
+                    Clear listing details
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Category, size, amenities, map location, and pricing in one
+                    place.
+                  </p>
+                </div>
+              </li>
+              <li className="flex gap-4">
+                <Heart className="h-6 w-6 text-primary shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold font-heading mb-1">
+                    Saved list
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Keep track of rentals, sales, stays, and land worth a second
+                    look.
+                  </p>
+                </div>
+              </li>
+            </ul>
+          </div>
+
+          <div className="rounded-3xl bg-foreground text-background p-8 md:p-10 relative overflow-hidden">
+            <div
+              className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-secondary/20 blur-2xl"
+              aria-hidden="true"
+            />
+            <Upload
+              className="h-8 w-8 text-secondary mb-6"
+              aria-hidden="true"
+            />
+            <h2 className="text-2xl md:text-3xl font-heading font-semibold mb-3">
+              List homes, villas, Airbnb stays & land
+            </h2>
+            <p className="text-background/70 mb-8">
+              Agents and landlords can upload photos, choose rent/sale/Airbnb,
+              set land size and purpose, and receive leads from interested
+              clients.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                asChild
+                className="bg-secondary text-secondary-foreground hover:bg-secondary/90"
+              >
+                <Link href="/pricing">
+                  Become an agent
+                  <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="border-background/25 bg-transparent text-background hover:bg-background/10 hover:text-background"
+              >
+                <Link href="/dashboard/listings/new">Upload a listing</Link>
+              </Button>
             </div>
           </div>
         </div>
       </section>
+    </div>
+  );
+}
+
+function CategoryStrip({
+  title,
+  subtitle,
+  href,
+  properties,
+  empty,
+}: {
+  title: string;
+  subtitle: string;
+  href: string;
+  properties: Property[] | null | undefined;
+  empty: {
+    title: string;
+    description: string;
+    tips?: string[];
+    browseHref: string;
+    browseLabel: string;
+    relatedLinks?: { href: string; label: string }[];
+  };
+}) {
+  const list = properties || [];
+
+  return (
+    <div>
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-3xl md:text-4xl font-heading font-semibold">
+            {title}
+          </h2>
+          <p className="text-muted-foreground mt-2">{subtitle}</p>
+        </div>
+        <Button variant="outline" asChild className="w-fit">
+          <Link href={href}>
+            View all
+            <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+          </Link>
+        </Button>
+      </div>
+
+      {list.length > 0 ? (
+        <PropertyGrid properties={list} />
+      ) : (
+        <CategoryEmptyState {...empty} />
+      )}
     </div>
   );
 }

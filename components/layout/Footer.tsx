@@ -16,7 +16,6 @@ export function Footer() {
     if (!email) return;
 
     setIsSubmitting(true);
-    // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1000));
     toast.success("Thanks for subscribing!");
     setEmail("");
@@ -24,33 +23,33 @@ export function Footer() {
   };
 
   return (
-    <footer className="border-t border-border/50 bg-accent/30">
+    <footer className="border-t border-border/60 bg-foreground text-background">
       <div className="container py-16">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-5 lg:gap-8">
-          {/* Brand Column */}
           <div className="lg:col-span-2">
             <Link
               href="/"
               className="flex items-center gap-2.5 mb-4 w-fit transition-opacity duration-200 hover:opacity-80"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary">
                 <Home
-                  className="h-5 w-5 text-primary-foreground"
+                  className="h-4 w-4 text-secondary-foreground"
                   aria-hidden="true"
                 />
               </div>
-              <span className="text-xl font-bold font-heading tracking-tight">
-                Nyeri Rentals
+              <span className="text-xl font-semibold font-heading tracking-tight">
+                GreenKey Realty
               </span>
             </Link>
-            <p className="text-muted-foreground max-w-sm mb-6">
-              Securing a rental house is now stress-free. Find your
-              perfect Rental with trusted agents and curated listings.
+            <p className="text-background/65 max-w-sm mb-6 text-sm leading-relaxed">
+              Helping people find homes across Nyeri County — and helping agents
+              put the right listings in front of ready renters.
             </p>
 
-            {/* Newsletter */}
             <div className="max-w-sm">
-              <h3 className="font-semibold font-heading mb-3">Stay Updated</h3>
+              <h3 className="font-heading font-semibold mb-3 text-sm">
+                New listings in your inbox
+              </h3>
               <form onSubmit={handleNewsletterSubmit} className="flex gap-2">
                 <div className="flex-1">
                   <label htmlFor="newsletter-email" className="sr-only">
@@ -62,194 +61,150 @@ export function Footer() {
                     name="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email…"
+                    placeholder="Your email…"
                     autoComplete="email"
                     required
-                    className="h-11"
+                    className="h-11 bg-background/10 border-background/20 text-background placeholder:text-background/45"
                   />
                 </div>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
-                  className="h-11 px-4"
+                  className="h-11 px-4 bg-secondary text-secondary-foreground hover:bg-secondary/90"
                 >
                   {isSubmitting ? (
-                    <span className="flex items-center gap-2">
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      <span className="sr-only">Subscribing…</span>
-                    </span>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   ) : (
-                    <>
-                      <Mail className="h-4 w-4" aria-hidden="true" />
-                      <span className="sr-only sm:not-sr-only sm:ml-2">
-                        Subscribe
-                      </span>
-                    </>
+                    <Mail className="h-4 w-4" aria-hidden="true" />
                   )}
+                  <span className="sr-only">Subscribe</span>
                 </Button>
               </form>
             </div>
           </div>
 
-          {/* Browse Column */}
           <nav aria-label="Browse properties">
-            <h3 className="font-semibold font-heading mb-4">Browse</h3>
-            <ul className="space-y-3 text-sm">
+            <h3 className="font-heading font-semibold mb-4 text-sm">Browse</h3>
+            <ul className="space-y-3 text-sm text-background/65">
               <li>
-                <Link
-                  href="/properties"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
-                >
-                  All Properties
+                <Link href="/properties" className="hover:text-background">
+                  All listings
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/properties?type=bedsitters"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  href="/properties?category=rent"
+                  className="hover:text-background"
                 >
-                  Bed Sitters
+                  For rent
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/properties?type=onebedroom"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  href="/properties?category=sale"
+                  className="hover:text-background"
                 >
-                  One bedroom
+                  For sale
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/properties?type=twobedroom"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  href="/properties?category=airbnb"
+                  className="hover:text-background"
                 >
-                  Two bedroom
+                  Airbnb stays
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/properties?type=house"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  href="/properties?type=villa"
+                  className="hover:text-background"
                 >
-                  Houses
+                  Villas
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/properties?type=apartment"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  href="/properties?type=land"
+                  className="hover:text-background"
                 >
-                  Apartments
+                  Plots & land
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/properties?type=condo"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  href="/properties?type=farmland"
+                  className="hover:text-background"
                 >
-                  Condos
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/properties?type=townhouse"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
-                >
-                  Townhouses
+                  Farmland
                 </Link>
               </li>
             </ul>
           </nav>
 
-          {/* For Agents Column */}
           <nav aria-label="Agent resources">
-            <h3 className="font-semibold font-heading mb-4">For Agents</h3>
-            <ul className="space-y-3 text-sm">
+            <h3 className="font-heading font-semibold mb-4 text-sm">
+              For agents
+            </h3>
+            <ul className="space-y-3 text-sm text-background/65">
               <li>
-                <Link
-                  href="/pricing"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
-                >
-                  Become an Agent
+                <Link href="/pricing" className="hover:text-background">
+                  Become an agent
+                </Link>
+              </li>
+              <li>
+                <Link href="/dashboard" className="hover:text-background">
+                  Agent dashboard
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/dashboard"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
+                  href="/dashboard/listings/new"
+                  className="hover:text-background"
                 >
-                  Agent Dashboard
+                  Upload a listing
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/dashboard/listings"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
-                >
-                  Manage Listings
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/dashboard/leads"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
-                >
-                  Lead Inbox
+                <Link href="/dashboard/leads" className="hover:text-background">
+                  Lead inbox
                 </Link>
               </li>
             </ul>
           </nav>
 
-          {/* Account Column */}
           <nav aria-label="Account">
-            <h3 className="font-semibold font-heading mb-4">Account</h3>
-            <ul className="space-y-3 text-sm">
+            <h3 className="font-heading font-semibold mb-4 text-sm">Account</h3>
+            <ul className="space-y-3 text-sm text-background/65">
               <li>
-                <Link
-                  href="/saved"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
-                >
-                  Saved Properties
+                <Link href="/saved" className="hover:text-background">
+                  Saved homes
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/profile"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
-                >
-                  My Profile
+                <Link href="/profile" className="hover:text-background">
+                  My profile
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/sign-in"
-                  className="text-muted-foreground hover:text-foreground transition-colors duration-200"
-                >
-                  Sign In
+                <Link href="/sign-in" className="hover:text-background">
+                  Sign in
                 </Link>
               </li>
             </ul>
           </nav>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-border/50 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
+        <div className="border-t border-background/15 mt-12 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-background/50">
           <p suppressHydrationWarning>
-            © {new Date().getFullYear()} Nyeri Rentals. All rights reserved.
+            © {new Date().getFullYear()} GreenKey Realty
           </p>
           <div className="flex items-center gap-6">
-            <Link
-              href="/privacy"
-              className="hover:text-foreground transition-colors duration-200"
-            >
-              Privacy Policy
+            <Link href="/privacy" className="hover:text-background">
+              Privacy
             </Link>
-            <Link
-              href="/terms"
-              className="hover:text-foreground transition-colors duration-200"
-            >
-              Terms of Service
+            <Link href="/terms" className="hover:text-background">
+              Terms
             </Link>
           </div>
         </div>
