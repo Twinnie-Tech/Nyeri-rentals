@@ -1,20 +1,21 @@
 import { createHash } from "node:crypto";
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
 } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import {
   PaymentMethod,
   PaymentStatus,
   Role,
   SubscriptionStatus,
 } from "@prisma/client";
-import type { PrismaService } from "../prisma/prisma.service";
-import type { RedisService } from "../redis/redis.service";
-import type { BankTransferDto, StkPushDto } from "./billing.dto";
+import { PrismaService } from "../prisma/prisma.service";
+import { RedisService } from "../redis/redis.service";
+import { BankTransferDto, StkPushDto } from "./billing.dto";
 
 function normalizeMpesaPhone(phone: string): string {
   const digits = phone.replace(/\D/g, "");
@@ -314,8 +315,16 @@ export class BillingService {
     return this.prisma.payment.findUnique({ where: { id: paymentId } });
   }
 
-  /** Dev helper: mark simulated M-Pesa as paid */
+  /** Staging/dev helper: mark simulated M-Pesa as paid (blocked in production). */
   async simulateComplete(userId: string, paymentId: string) {
+    const nodeEnv = this.config.get<string>("NODE_ENV") || "development";
+    const allow =
+      this.config.get<string>("ALLOW_PAYMENT_SIMULATE") === "true" ||
+      nodeEnv !== "production";
+    if (!allow) {
+      throw new ForbiddenException("Payment simulation is disabled");
+    }
+
     const payment = await this.prisma.payment.findFirst({
       where: { id: paymentId, userId },
     });

@@ -5,14 +5,17 @@
 | Env | Who | Web | API | Data |
 |-----|-----|-----|-----|------|
 | **dev** | Engineers | localhost:3000 | localhost:4000 | Docker Postgres/Redis |
-| **staging** | Clients / QA | `staging.…` | `api-staging.…` | Railway DB + Upstash + Sanity `staging` |
+| **staging** | Clients / QA / talk | `staging.…` or Vercel URL | `api-staging.…` or Railway URL | Railway DB + Upstash + Sanity `staging` |
 | **prod** | Public | `yourdomain.com` | `api.…` | Railway DB + Upstash + Sanity `production` |
+
+> **Staging first (talk + clients):** follow [`STAGING_GO_LIVE.md`](./STAGING_GO_LIVE.md) — create `develop`, wire Upstash + Railway + Vercel + Sanity `staging`, then run `node scripts/smoke-staging.mjs <API>/v1`.
 
 **Config map**
 
 | File | Role |
 |------|------|
 | [`deploy/environments.yaml`](../deploy/environments.yaml) | Env matrix (URLs, secrets, branches) |
+| [`STAGING_GO_LIVE.md`](./STAGING_GO_LIVE.md) | Staging checklist (talk + client QA) |
 | [`Dockerfile.api`](../Dockerfile.api) | Nest image for Railway |
 | [`railway.toml`](../railway.toml) | Railway build + healthcheck |
 | [`vercel.json`](../vercel.json) | Next on Vercel |
@@ -160,6 +163,8 @@ Open Nest service → **Variables**. Copy from `apps/api/.env.staging.example` a
 | `SANITY_DATASET` | **`staging`** |
 | `SANITY_WRITE_TOKEN` | write token |
 | Messaging / Mailtrap / M-Pesa sandbox | as in staging example |
+| `ALLOW_PAYMENT_SIMULATE` | `true` for talk / first smoke |
+| `SMS_PROVIDER` / `EMAIL_PROVIDER` | `console` for talk (OTP in Railway logs) |
 
 ### E4. Networking
 1. **Settings → Networking → Generate domain**  

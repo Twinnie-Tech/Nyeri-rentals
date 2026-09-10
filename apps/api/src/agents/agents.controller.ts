@@ -5,8 +5,8 @@ import {
   CurrentUser,
 } from "../common/decorators/current-user.decorator";
 import { AgentPlanGuard } from "../common/guards/agent-plan.guard";
-import type { AgentOnboardingDto, UpdateAgentDto } from "./agents.dto";
-import type { AgentsService } from "./agents.service";
+import { AgentOnboardingDto, UpdateAgentDto } from "./agents.dto";
+import { AgentsService } from "./agents.service";
 
 @ApiTags("agents")
 @ApiBearerAuth("JWT")

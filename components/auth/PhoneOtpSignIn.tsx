@@ -1,7 +1,7 @@
 "use client";
 
 import { Mail, Smartphone } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 import { PhoneWithCountryInput } from "@/components/auth/PhoneWithCountryInput";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 type Channel = "phone" | "email";
 
 export function PhoneOtpSignIn() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get("redirect_url") || "/";
 
@@ -92,9 +91,10 @@ export function PhoneOtpSignIn() {
       const res = await fetch("/api/auth/otp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
           channel,
-          code,
+          code: code.trim(),
           name: name || undefined,
           ...(channel === "phone" ? { phone } : { email: email.trim() }),
         }),
@@ -121,8 +121,8 @@ export function PhoneOtpSignIn() {
           : requested
         : "/onboarding";
 
-      router.push(dest);
-      router.refresh();
+      // Full navigation so layout remounts and picks up auth cookies
+      window.location.assign(dest);
     });
   }
 

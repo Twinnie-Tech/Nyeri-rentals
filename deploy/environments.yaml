@@ -26,6 +26,7 @@ environments:
     label: Client / QA staging
     git_branch: develop
     urls:
+      # Replace after first deploy (Vercel + Railway public hosts or custom DNS)
       web: https://staging.yourdomain.com
       api: https://api-staging.yourdomain.com/v1
       swagger: https://api-staging.yourdomain.com/docs
@@ -47,11 +48,15 @@ environments:
       - VERCEL_ORG_ID
       - VERCEL_PROJECT_ID
     providers:
-      email: mailtrap (testing inbox)
-      sms: africastalking sandbox
-      whatsapp: infobip trial
-      mpesa: sandbox
+      # Talk / first smoke: console OTP + ALLOW_PAYMENT_SIMULATE (see .env.staging.example)
+      # Client QA: mailtrap + africastalking sandbox + mpesa sandbox
+      email: console | mailtrap (testing inbox)
+      sms: console | africastalking sandbox
+      whatsapp: off | infobip trial
+      mpesa: simulate | sandbox
     workflow: .github/workflows/deploy-staging.yml
+    runbook: docs/STAGING_GO_LIVE.md
+    smoke: node scripts/smoke-staging.mjs $API_URL
 
   production:
     label: Public production

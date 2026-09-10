@@ -31,9 +31,20 @@ export function AgentCheckout() {
 
   useEffect(() => {
     fetch("/api/billing/plan")
-      .then((r) => r.json())
-      .then(setPlan)
-      .catch(() => setError("Could not load plan"));
+      .then(async (r) => {
+        const data = await r.json().catch(() => null);
+        if (!r.ok) {
+          throw new Error(
+            (data && typeof data === "object" && "message" in data
+              ? String((data as { message: unknown }).message)
+              : null) || `Could not load plan (${r.status})`,
+          );
+        }
+        setPlan(data as Plan);
+      })
+      .catch((err) =>
+        setError(err instanceof Error ? err.message : "Could not load plan"),
+      );
   }, []);
 
   function payMpesa(e: React.FormEvent) {

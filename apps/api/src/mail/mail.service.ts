@@ -3,13 +3,9 @@ import {
   Logger,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import nodemailer, { type Transporter } from "nodemailer";
-import type {
-  MailProviderName,
-  SendMailInput,
-  SendMailResult,
-} from "./mail.types";
+import { MailProviderName, SendMailInput, SendMailResult } from "./mail.types";
 import { buildOtpEmail } from "./otp-email.template";
 import { buildWelcomeEmail } from "./welcome-email.template";
 
