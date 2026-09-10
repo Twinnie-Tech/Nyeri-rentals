@@ -4,9 +4,9 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { ListingStatus, type Prisma } from "@prisma/client";
-import type { PrismaService } from "../prisma/prisma.service";
-import type { SanityService } from "../sanity/sanity.service";
-import type {
+import { PrismaService } from "../prisma/prisma.service";
+import { SanityService } from "../sanity/sanity.service";
+import {
   CreatePropertyDto,
   PropertyQueryDto,
   UpdatePropertyDto,

@@ -5,7 +5,7 @@ import {
   Injectable,
 } from "@nestjs/common";
 import { SubscriptionStatus } from "@prisma/client";
-import type { PrismaService } from "../../prisma/prisma.service";
+import { PrismaService } from "../../prisma/prisma.service";
 
 /** Requires USER to have an ACTIVE agent subscription (or ADMIN role). */
 @Injectable()

@@ -5,8 +5,8 @@ import {
   CurrentUser,
 } from "../common/decorators/current-user.decorator";
 import { Public } from "../common/decorators/public.decorator";
-import type { BankTransferDto, StkPushDto } from "./billing.dto";
-import type { BillingService } from "./billing.service";
+import { BankTransferDto, StkPushDto } from "./billing.dto";
+import { BillingService } from "./billing.service";
 
 @ApiTags("billing")
 @Controller("billing")
@@ -58,7 +58,8 @@ export class BillingController {
   @Post("mpesa/simulate-complete/:paymentId")
   @ApiBearerAuth("JWT")
   @ApiOperation({
-    summary: "Dev only: mark simulated M-Pesa payment as completed",
+    summary:
+      "Mark simulated M-Pesa payment as completed (staging/dev; blocked in production unless ALLOW_PAYMENT_SIMULATE=true)",
   })
   simulate(
     @CurrentUser() user: AuthUser,

@@ -7,13 +7,13 @@ import {
 } from "@nestjs/swagger";
 import { PaymentMethod, PaymentStatus, Role } from "@prisma/client";
 import { IsBoolean } from "class-validator";
-import type { BillingService } from "../billing/billing.service";
+import { BillingService } from "../billing/billing.service";
 import {
   type AuthUser,
   CurrentUser,
 } from "../common/decorators/current-user.decorator";
 import { Roles } from "../common/decorators/roles.decorator";
-import type { PrismaService } from "../prisma/prisma.service";
+import { PrismaService } from "../prisma/prisma.service";
 
 class VerifyBankDto {
   @ApiProperty({ example: true })

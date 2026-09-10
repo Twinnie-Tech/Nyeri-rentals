@@ -15,7 +15,8 @@
     "typegen": "sanity schema extract --path=./schema.json && sanity typegen generate",
     "update-types": "pnpm run typegen",
     "seed": "node scripts/with-system-ca.cjs npx tsx scripts/seed/seed.ts",
-    "seed:clean": "node scripts/with-system-ca.cjs npx tsx scripts/seed/seed.ts --clean"
+    "seed:clean": "node scripts/with-system-ca.cjs npx tsx scripts/seed/seed.ts --clean",
+    "smoke:staging": "node scripts/smoke-staging.mjs"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

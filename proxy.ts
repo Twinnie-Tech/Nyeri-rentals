@@ -161,8 +161,10 @@ export default async function proxy(req: NextRequest) {
 }
 
 export const config = {
+  // Do not run proxy on /api — Next 16 + Turbopack can 404 Route Handlers
+  // when proxy matches them (see vercel/next.js#92921). Auth cookies are
+  // still set by Route Handlers; proxy only gates pages.
   matcher: [
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    "/(api|trpc)(.*)",
+    "/((?!_next|api|trpc|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
   ],
 };

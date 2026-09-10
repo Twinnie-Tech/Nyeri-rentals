@@ -4,9 +4,9 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { Role, SubscriptionStatus } from "@prisma/client";
-import type { PrismaService } from "../prisma/prisma.service";
-import type { SanityService } from "../sanity/sanity.service";
-import type { AgentOnboardingDto, UpdateAgentDto } from "./agents.dto";
+import { PrismaService } from "../prisma/prisma.service";
+import { SanityService } from "../sanity/sanity.service";
+import { AgentOnboardingDto, UpdateAgentDto } from "./agents.dto";
 
 @Injectable()
 export class AgentsService {

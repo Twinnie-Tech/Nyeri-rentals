@@ -13,7 +13,7 @@ import {
   type AuthUser,
   CurrentUser,
 } from "../common/decorators/current-user.decorator";
-import type {
+import {
   CompleteOnboardingDto,
   RequestEmailVerificationDto,
   RequestPhoneVerificationDto,
@@ -21,7 +21,7 @@ import type {
   VerifyEmailDto,
   VerifyPhoneDto,
 } from "./users.dto";
-import type { UsersService } from "./users.service";
+import { UsersService } from "./users.service";
 
 @ApiTags("users")
 @ApiBearerAuth("JWT")

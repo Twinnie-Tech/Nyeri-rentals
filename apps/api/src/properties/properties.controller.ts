@@ -26,15 +26,15 @@ import {
 } from "../common/decorators/current-user.decorator";
 import { Public } from "../common/decorators/public.decorator";
 import { AgentPlanGuard } from "../common/guards/agent-plan.guard";
-import type { SanityService } from "../sanity/sanity.service";
-import type {
+import { SanityService } from "../sanity/sanity.service";
+import {
   CreatePropertyDto,
   PropertyQueryDto,
   UpdatePropertyDto,
   UpdatePropertyStatusDto,
   UpsertPropertyMirrorDto,
 } from "./properties.dto";
-import type { PropertiesService } from "./properties.service";
+import { PropertiesService } from "./properties.service";
 
 @ApiTags("properties")
 @Controller("properties")

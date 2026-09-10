@@ -6,13 +6,13 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import { Prisma } from "@prisma/client";
-import type { MailService } from "../mail/mail.service";
-import type { MessagingService } from "../messaging/messaging.service";
-import type { PrismaService } from "../prisma/prisma.service";
-import type { RedisService } from "../redis/redis.service";
-import type {
+import { MailService } from "../mail/mail.service";
+import { MessagingService } from "../messaging/messaging.service";
+import { PrismaService } from "../prisma/prisma.service";
+import { RedisService } from "../redis/redis.service";
+import {
   CompleteOnboardingDto,
   RequestEmailVerificationDto,
   RequestPhoneVerificationDto,

@@ -4,9 +4,9 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import { LeadStatus } from "@prisma/client";
-import type { PrismaService } from "../prisma/prisma.service";
-import type { SanityService } from "../sanity/sanity.service";
-import type { CreateLeadDto, UpdateLeadStatusDto } from "./leads.dto";
+import { PrismaService } from "../prisma/prisma.service";
+import { SanityService } from "../sanity/sanity.service";
+import { CreateLeadDto, UpdateLeadStatusDto } from "./leads.dto";
 
 function paginate(page?: number, limit?: number) {
   const safePage = Math.max(1, page || 1);

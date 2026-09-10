@@ -3,9 +3,9 @@ import {
   Logger,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import { buildOtpSms, buildWelcomeSms } from "./message.templates";
-import type {
+import {
   PhoneDeliveryResult,
   SendMessageResult,
   SmsProviderName,
