@@ -50,11 +50,11 @@ export function Navbar() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/auth/me")
+    fetch("/api/auth/me", { credentials: "same-origin", cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) return null;
         const data = await res.json();
-        return data.user as NavUser;
+        return (data.user as NavUser) || null;
       })
       .then((u) => {
         if (!cancelled) setUser(u);
@@ -65,7 +65,8 @@ export function Navbar() {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // Re-check session after client navigations (e.g. OTP sign-in → home)
+  }, [pathname]);
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });

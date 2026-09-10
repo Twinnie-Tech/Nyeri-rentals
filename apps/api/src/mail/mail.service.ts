@@ -3,9 +3,9 @@ import {
   Logger,
   ServiceUnavailableException,
 } from "@nestjs/common";
-import type { ConfigService } from "@nestjs/config";
+import { ConfigService } from "@nestjs/config";
 import nodemailer, { type Transporter } from "nodemailer";
-import type {
+import {
   MailProviderName,
   SendMailInput,
   SendMailResult,

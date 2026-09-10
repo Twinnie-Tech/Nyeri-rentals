@@ -2,7 +2,13 @@
 
 **Length:** 30–45 minutes (engineers / meetup)  
 **Demo product:** GreenKey Realty (Nyeri-focused real estate)  
-**Stack:** Next.js App Router + NestJS BFF (`/v1`) + Postgres + Redis + Sanity + M-Pesa / SMS / email
+**Stack:** Next.js App Router + NestJS BFF (`/v1`) + Postgres + Redis + Sanity + M-Pesa / SMS / email  
+**Slides (PPTX):** [`RenderCon_Proxy_vs_BFF_Slides.pptx`](./RenderCon_Proxy_vs_BFF_Slides.pptx)  
+**Full pitch (CFP copy/paste):** [`RENDERCON_FULL_PITCH.md`](./RENDERCON_FULL_PITCH.md)  
+**CFP / RenderCon pitch:** [`RENDERCON_BFF_PITCH.md`](./RENDERCON_BFF_PITCH.md)  
+**Submission draft (proxy vs BFF):** [`RENDERCON_SUBMISSION_DRAFT.md`](./RENDERCON_SUBMISSION_DRAFT.md)  
+**Full talk script:** [`RENDERCON_FULL_TALK_SCRIPT.md`](./RENDERCON_FULL_TALK_SCRIPT.md)  
+**Slide content (markdown):** [`RENDERCON_SLIDE_CONTENT.md`](./RENDERCON_SLIDE_CONTENT.md)
 
 ---
 

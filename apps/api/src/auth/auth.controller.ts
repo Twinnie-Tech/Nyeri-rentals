@@ -6,14 +6,14 @@ import {
 } from "../common/decorators/current-user.decorator";
 import { Public } from "../common/decorators/public.decorator";
 import { JwtAuthGuard } from "../common/guards/jwt-auth.guard";
-import type {
+import {
   LoginEmailDto,
   RefreshTokenDto,
   RegisterEmailDto,
   RequestOtpDto,
   VerifyOtpDto,
 } from "./auth.dto";
-import type { AuthService } from "./auth.service";
+import { AuthService } from "./auth.service";
 
 @ApiTags("auth")
 @Controller("auth")

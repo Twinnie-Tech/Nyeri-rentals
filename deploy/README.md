@@ -10,5 +10,6 @@
 #     apps/api/.env.production.example
 #     .env.example (web section)
 #
-# Full steps: docs/DEPLOY.md
+# Full steps: docs/DEPLOY.md · staging: docs/STAGING_GO_LIVE.md
 # Machine-readable matrix: deploy/environments.yaml
+# Smoke: node scripts/smoke-staging.mjs https://<api-host>/v1
