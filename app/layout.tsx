@@ -1,26 +1,21 @@
-import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Inter, Plus_Jakarta_Sans } from "next/font/google";
+import { Fraunces, Geist_Mono, Manrope } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { SanityLive } from "@/lib/sanity/live";
 import "./globals.css";
 
-// Body font - highly readable
-const inter = Inter({
-  variable: "--font-inter",
+const manrope = Manrope({
+  variable: "--font-manrope",
   subsets: ["latin"],
   display: "swap",
 });
 
-// Heading font - modern, friendly geometric
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
   subsets: ["latin"],
   display: "swap",
-  weight: ["500", "600", "700", "800"],
 });
 
-// Mono font for code
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -29,23 +24,22 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Nyeri Rentals | Find Your Perfect Rental House",
-    template: "%s | Nyeri Rentals",
+    default: "GreenKey Realty | Homes, Land & Stays in Nyeri",
+    template: "%s | GreenKey Realty",
   },
   description:
-    "Securing a rental house is now stress-free. Browse properties, save favorites, and connect with trusted agents.",
+    "Rent homes, buy property, list Airbnb stays, find luxury villas, plots, and farmland across Nyeri County.",
   keywords: [
-    "real estate",
-    "homes for sale",
-    "first-time homebuyer",
-    "property listings",
+    "Nyeri real estate",
+    "GreenKey Realty",
+    "homes for sale Nyeri",
+    "Airbnb Nyeri",
+    "villas Nyeri",
+    "plots for sale",
+    "farmland Nyeri",
     "houses",
     "apartments",
-    "bed sitter",
-    "one bedrooms",
-    "two bedrooms",
-    "three bedrooms",
-    "studions"
+    "bedsitter",
   ],
   authors: [{ name: "Twinnie Tech" }],
   creator: "Twinnie Tech",
@@ -54,17 +48,17 @@ export const metadata: Metadata = {
   ),
   openGraph: {
     type: "website",
-    locale: "en_US",
-    siteName: "Nyeri Rentals",
-    title: "Nyeri Rentals | Find Your Perfect House",
+    locale: "en_KE",
+    siteName: "GreenKey Realty",
+    title: "GreenKey Realty | Homes, Land & Stays in Nyeri",
     description:
-      "Easily rent a house in nyeri county. Browse houses, save favorites, and connect with trusted agents.",
+      "Rent, buy, host, or invest — homes, villas, Airbnb stays, plots, and farmland in Nyeri County.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nyeri Rentals | Find Your Perfect Home",
+    title: "GreenKey Realty | Homes, Land & Stays in Nyeri",
     description:
-      "Easily rent a house in nyeri county. Browse houses, save favorites, and connect with trusted agents.",
+      "Rent, buy, host, or invest — homes, villas, Airbnb stays, plots, and farmland in Nyeri County.",
   },
   robots: {
     index: true,
@@ -74,8 +68,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FBF9F6" },
-    { media: "(prefers-color-scheme: dark)", color: "#2D2824" },
+    { media: "(prefers-color-scheme: light)", color: "#F3F7F5" },
+    { media: "(prefers-color-scheme: dark)", color: "#1A2420" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -87,30 +81,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          {/* Preconnect to external domains for performance */}
-          <link rel="preconnect" href="https://cdn.sanity.io" />
-          <link rel="preconnect" href="https://fonts.googleapis.com" />
-          <link
-            rel="preconnect"
-            href="https://fonts.gstatic.com"
-            crossOrigin="anonymous"
-          />
-        </head>
-        <body
-          className={`${inter.variable} ${plusJakarta.variable} ${geistMono.variable} font-body antialiased`}
-        >
-          {/* Skip link for accessibility */}
-          <a href="#main" className="skip-link">
-            Skip to main content
-          </a>
-          {children}
-          <Toaster />
-          <SanityLive />
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://cdn.sanity.io" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+      </head>
+      <body
+        className={`${manrope.variable} ${fraunces.variable} ${geistMono.variable} font-body antialiased`}
+      >
+        <a href="#main" className="skip-link">
+          Skip to main content
+        </a>
+        {children}
+        <Toaster />
+        <SanityLive />
+      </body>
+    </html>
   );
 }

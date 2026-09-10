@@ -1,0 +1,9 @@
+-- AlterTable
+ALTER TABLE "PropertyMirror" ADD COLUMN IF NOT EXISTS "description" TEXT;
+ALTER TABLE "PropertyMirror" ADD COLUMN IF NOT EXISTS "squareFeet" INTEGER;
+ALTER TABLE "PropertyMirror" ADD COLUMN IF NOT EXISTS "yearBuilt" INTEGER;
+ALTER TABLE "PropertyMirror" ADD COLUMN IF NOT EXISTS "street" TEXT;
+ALTER TABLE "PropertyMirror" ADD COLUMN IF NOT EXISTS "zipCode" TEXT;
+ALTER TABLE "PropertyMirror" ADD COLUMN IF NOT EXISTS "amenities" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "PropertyMirror" ADD COLUMN IF NOT EXISTS "images" JSONB;
+ALTER TABLE "PropertyMirror" ADD COLUMN IF NOT EXISTS "details" JSONB;

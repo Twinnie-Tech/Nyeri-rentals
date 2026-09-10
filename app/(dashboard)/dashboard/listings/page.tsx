@@ -1,7 +1,7 @@
-import { auth } from "@clerk/nextjs/server";
 import { MoreHorizontal, Pencil, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { DeleteListingButton } from "@/components/dashboard/DeleteListingButton";
 import { ListingStatusSelect } from "@/components/dashboard/ListingStatusSelect";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getSessionUser } from "@/lib/api/session";
+import {
+  getListingCategoryLabel,
+  getPropertyTypeLabel,
+  isLandType,
+} from "@/lib/property-categories";
 import { urlFor } from "@/lib/sanity/image";
 import { sanityFetch } from "@/lib/sanity/live";
 import {
@@ -32,7 +38,9 @@ import type { Property } from "@/types";
 
 export default async function ListingsPage() {
   // Middleware guarantees: authenticated + has agent plan + onboarding complete
-  const { userId } = await auth();
+  const session = await getSessionUser();
+  if (!session) redirect("/sign-in");
+  const userId = session.id;
 
   const { data: agent } = await sanityFetch({
     query: AGENT_ID_BY_USER_QUERY,
@@ -113,6 +121,10 @@ export default async function ListingsPage() {
                         >
                           {listing.title}
                         </Link>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {getListingCategoryLabel(listing.listingCategory)} ·{" "}
+                          {getPropertyTypeLabel(listing.propertyType)}
+                        </p>
                       </div>
                     </div>
                   </TableCell>
@@ -126,7 +138,9 @@ export default async function ListingsPage() {
                     />
                   </TableCell>
                   <TableCell className="text-muted-foreground">
-                    {listing.bedrooms} beds • {listing.bathrooms} baths
+                    {isLandType(listing.propertyType)
+                      ? "Land / plot"
+                      : `${listing.bedrooms} beds • ${listing.bathrooms} baths`}
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {formatDate(listing.createdAt)}

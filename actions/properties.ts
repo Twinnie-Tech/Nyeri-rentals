@@ -1,12 +1,7 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
-import { client } from "@/lib/sanity/client";
-import { sanityFetch } from "@/lib/sanity/live";
-import {
-  AGENT_ID_BY_USER_QUERY,
-  PROPERTY_AGENT_REF_QUERY,
-} from "@/lib/sanity/queries";
+import { apiFetch } from "@/lib/api/client";
+import { getAccessToken, getSessionUser } from "@/lib/api/session";
 
 interface ImageReference {
   _type: "image";
@@ -33,8 +28,47 @@ interface ListingFormDataWithImages {
   title: string;
   description: string;
   price: number;
-  propertyType: "house" | "apartment" | "condo" | "townhouse" | "land";
-  status?: "active" | "pending" | "sold";
+  listingCategory: "rent" | "sale" | "airbnb";
+  propertyType:
+    | "house"
+    | "apartment"
+    | "bedsitter"
+    | "condo"
+    | "townhouse"
+    | "villa"
+    | "land"
+    | "farmland";
+  landSize?:
+    | "quarter_acre"
+    | "half_acre"
+    | "one_acre"
+    | "multi_acre"
+    | "custom";
+  landSizeAcres?: number;
+  landPurpose?: "residential" | "commercial" | "agricultural";
+  furnished?: "unfurnished" | "semi_furnished" | "furnished";
+  depositAmount?: number;
+  availableFrom?: string;
+  petsAllowed?: boolean;
+  titleDeedReady?: boolean;
+  serviceCharge?: number;
+  originalPrice?: number;
+  openHouseDate?: string;
+  maxGuests?: number;
+  minNights?: number;
+  cleaningFee?: number;
+  checkInTime?: string;
+  checkOutTime?: string;
+  hasPool?: boolean;
+  hasStaffQuarters?: boolean;
+  hasGarden?: boolean;
+  hasBackupPower?: boolean;
+  roadAccess?: "tarmac" | "murram" | "footpath" | "none";
+  fenced?: boolean;
+  waterSource?: "borehole" | "river" | "piped" | "rain" | "none";
+  cropsSuitable?: string;
+  parkingSpaces?: number;
+  status?: "active" | "pending" | "sold" | "rented";
   bedrooms: number;
   bathrooms: number;
   squareFeet: number;
@@ -49,63 +83,71 @@ type CreateListingResult =
   | { success: true; id: string }
   | { success: false; error: string };
 
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/--+/g, "-")
-    .trim();
+function toApiBody(data: ListingFormDataWithImages) {
+  return {
+    title: data.title,
+    description: data.description,
+    price: data.price,
+    listingCategory: data.listingCategory,
+    propertyType: data.propertyType,
+    landSize: data.landSize,
+    landSizeAcres: data.landSizeAcres,
+    landPurpose: data.landPurpose,
+    furnished: data.furnished,
+    depositAmount: data.depositAmount,
+    availableFrom: data.availableFrom,
+    petsAllowed: data.petsAllowed,
+    titleDeedReady: data.titleDeedReady,
+    serviceCharge: data.serviceCharge,
+    originalPrice: data.originalPrice,
+    openHouseDate: data.openHouseDate,
+    maxGuests: data.maxGuests,
+    minNights: data.minNights,
+    cleaningFee: data.cleaningFee,
+    checkInTime: data.checkInTime,
+    checkOutTime: data.checkOutTime,
+    hasPool: data.hasPool,
+    hasStaffQuarters: data.hasStaffQuarters,
+    hasGarden: data.hasGarden,
+    hasBackupPower: data.hasBackupPower,
+    roadAccess: data.roadAccess,
+    fenced: data.fenced,
+    waterSource: data.waterSource,
+    cropsSuitable: data.cropsSuitable,
+    parkingSpaces: data.parkingSpaces,
+    status: data.status,
+    bedrooms: data.bedrooms,
+    bathrooms: data.bathrooms,
+    squareFeet: data.squareFeet,
+    yearBuilt: data.yearBuilt,
+    address: data.address,
+    location: data.location,
+    amenities: data.amenities || [],
+    images: (data.images || []).map((img) => ({
+      _key: img._key,
+      assetRef: img.asset._ref,
+    })),
+  };
 }
 
 export async function createListing(
   data: ListingFormDataWithImages,
 ): Promise<CreateListingResult> {
   try {
-    const { userId } = await auth();
+    const user = await getSessionUser();
+    const accessToken = await getAccessToken();
 
-    if (!userId) {
+    if (!user || !accessToken) {
       return { success: false, error: "Not authenticated" };
     }
 
-    const { data: agent } = await sanityFetch({
-      query: AGENT_ID_BY_USER_QUERY,
-      params: { userId },
+    const created = await apiFetch<{ id: string }>("/properties", {
+      method: "POST",
+      accessToken,
+      body: toApiBody(data),
     });
 
-    if (!agent?._id) {
-      return {
-        success: false,
-        error:
-          "Agent profile not found. Complete onboarding first at /dashboard/onboarding.",
-      };
-    }
-
-    const createdProperty = await client.create({
-      _type: "property",
-      title: data.title,
-      slug: { _type: "slug", current: slugify(data.title) },
-      description: data.description,
-      price: data.price,
-      propertyType: data.propertyType,
-      status: "active",
-      bedrooms: data.bedrooms,
-      bathrooms: data.bathrooms,
-      squareFeet: data.squareFeet,
-      yearBuilt: data.yearBuilt,
-      address: data.address,
-      location: data.location
-        ? { _type: "geopoint", lat: data.location.lat, lng: data.location.lng }
-        : undefined,
-      amenities: data.amenities || [],
-      images: data.images || [],
-      agent: { _type: "reference", _ref: agent._id },
-      featured: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-
-    return { success: true, id: createdProperty._id };
+    return { success: true, id: created.id };
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to create listing";
@@ -117,118 +159,36 @@ export async function updateListing(
   listingId: string,
   data: ListingFormDataWithImages,
 ) {
-  const { userId } = await auth();
+  const accessToken = await getAccessToken();
+  if (!accessToken) throw new Error("Not authenticated");
 
-  if (!userId) {
-    throw new Error("Not authenticated");
-  }
-
-  const { data: agent } = await sanityFetch({
-    query: AGENT_ID_BY_USER_QUERY,
-    params: { userId },
+  await apiFetch(`/properties/${encodeURIComponent(listingId)}`, {
+    method: "PUT",
+    accessToken,
+    body: toApiBody(data),
   });
-
-  if (!agent) {
-    throw new Error("Agent not found");
-  }
-
-  // Verify ownership
-  const { data: listing } = await sanityFetch({
-    query: PROPERTY_AGENT_REF_QUERY,
-    params: { id: listingId },
-  });
-
-  if (!listing || listing.agent._ref !== agent._id) {
-    throw new Error("Unauthorized");
-  }
-
-  await client
-    .patch(listingId)
-    .set({
-      title: data.title,
-      slug: { _type: "slug", current: slugify(data.title) },
-      description: data.description,
-      price: data.price,
-      propertyType: data.propertyType,
-      status: data.status || "active",
-      bedrooms: data.bedrooms,
-      bathrooms: data.bathrooms,
-      squareFeet: data.squareFeet,
-      yearBuilt: data.yearBuilt,
-      address: data.address,
-      location: data.location
-        ? { _type: "geopoint", lat: data.location.lat, lng: data.location.lng }
-        : undefined,
-      amenities: data.amenities || [],
-      images: data.images || [],
-      updatedAt: new Date().toISOString(),
-    })
-    .commit();
 }
 
 export async function updateListingStatus(
   listingId: string,
-  status: "active" | "pending" | "sold",
+  status: "active" | "pending" | "sold" | "rented",
 ) {
-  const { userId } = await auth();
+  const accessToken = await getAccessToken();
+  if (!accessToken) throw new Error("Not authenticated");
 
-  if (!userId) {
-    throw new Error("Not authenticated");
-  }
-
-  const { data: agent } = await sanityFetch({
-    query: AGENT_ID_BY_USER_QUERY,
-    params: { userId },
+  await apiFetch(`/properties/${encodeURIComponent(listingId)}/status`, {
+    method: "PATCH",
+    accessToken,
+    body: { status },
   });
-
-  if (!agent) {
-    throw new Error("Agent not found");
-  }
-
-  // Verify ownership
-  const { data: listing } = await sanityFetch({
-    query: PROPERTY_AGENT_REF_QUERY,
-    params: { id: listingId },
-  });
-
-  if (!listing || listing.agent._ref !== agent._id) {
-    throw new Error("Unauthorized");
-  }
-
-  await client
-    .patch(listingId)
-    .set({
-      status,
-      updatedAt: new Date().toISOString(),
-    })
-    .commit();
 }
 
 export async function deleteListing(listingId: string) {
-  const { userId } = await auth();
+  const accessToken = await getAccessToken();
+  if (!accessToken) throw new Error("Not authenticated");
 
-  if (!userId) {
-    throw new Error("Not authenticated");
-  }
-
-  const { data: agent } = await sanityFetch({
-    query: AGENT_ID_BY_USER_QUERY,
-    params: { userId },
+  await apiFetch(`/properties/${encodeURIComponent(listingId)}`, {
+    method: "DELETE",
+    accessToken,
   });
-
-  if (!agent) {
-    throw new Error("Agent not found");
-  }
-
-  // Verify ownership
-  const { data: listing } = await sanityFetch({
-    query: PROPERTY_AGENT_REF_QUERY,
-    params: { id: listingId },
-  });
-
-  if (!listing || listing.agent._ref !== agent._id) {
-    throw new Error("Unauthorized");
-  }
-
-  await client.delete(listingId);
 }

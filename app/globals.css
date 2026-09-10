@@ -6,8 +6,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter);
-  --font-heading: var(--font-plus-jakarta);
+  --font-sans: var(--font-manrope);
+  --font-heading: var(--font-fraunces);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -47,7 +47,6 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
 
-  /* Container configuration */
   --container-sm: 640px;
   --container-md: 768px;
   --container-lg: 1024px;
@@ -56,137 +55,106 @@
 }
 
 /* ============================================
-   NESTWELL - Earth Tone Design System
+   Nyeri Rentals — Highland Mist design system
+   Cool mist surfaces + deep evergreen + warm amber
    ============================================ */
 
 :root {
-  /* Base radius - friendlier, more rounded */
-  --radius: 0.75rem;
+  --radius: 0.625rem;
 
-  /* Earth Tone Color Palette - Light Mode */
-  /* Background: Warm Cream */
-  --background: oklch(97.869% 0.01394 156.007);
-  /* Foreground: Deep Espresso */
-  --foreground: oklch(0.25 0.02 50);
+  /* Soft highland mist */
+  --background: oklch(0.975 0.008 160);
+  --foreground: oklch(0.22 0.025 160);
 
-  /* Cards: Slightly warmer white */
-  --card: oklch(0.995 0.005 90);
-  --card-foreground: oklch(0.25 0.02 50);
+  --card: oklch(0.995 0.004 160);
+  --card-foreground: oklch(0.22 0.025 160);
 
-  /* Popover */
-  --popover: oklch(0.995 0.005 90);
-  --popover-foreground: oklch(0.25 0.02 50);
+  --popover: oklch(0.995 0.004 160);
+  --popover-foreground: oklch(0.22 0.025 160);
 
-  /* Primary: Terracotta */
-  --primary:oklch(66.395% 0.17181 141.046);
-  --primary-foreground: oklch(0.98 0.01 90);
+  /* Deep evergreen */
+  --primary: oklch(0.38 0.08 155);
+  --primary-foreground: oklch(0.98 0.01 160);
 
-  /* Secondary: Sage Green */
-  --secondary: oklch(0.65 0.08 145);
-  --secondary-foreground: oklch(0.25 0.02 50);
+  /* Warm amber accent */
+  --secondary: oklch(0.72 0.12 75);
+  --secondary-foreground: oklch(0.22 0.04 60);
 
-  /* Muted: Soft Clay */
-  --muted: oklch(0.94 0.015 80);
-  --muted-foreground: oklch(0.45 0.02 50);
+  --muted: oklch(0.94 0.01 160);
+  --muted-foreground: oklch(0.48 0.02 160);
 
-  /* Accent: Warm highlight */
-  --accent: oklch(0.92 0.02 55);
-  --accent-foreground: oklch(0.25 0.02 50);
+  --accent: oklch(0.93 0.02 155);
+  --accent-foreground: oklch(0.28 0.04 155);
 
-  /* Destructive: Warm red */
   --destructive: oklch(0.55 0.2 25);
+  --success: oklch(0.48 0.1 155);
 
-  /* Success: Forest green */
-  --success: oklch(0.45 0.1 160);
+  --border: oklch(0.88 0.012 160);
+  --input: oklch(0.88 0.012 160);
+  --ring: oklch(0.45 0.08 155);
 
-  /* Borders: Stone gray */
-  --border: oklch(0.88 0.015 80);
-  --input: oklch(0.88 0.015 80);
-  --ring: oklch(0.55 0.12 35);
+  --chart-1: oklch(0.45 0.08 155);
+  --chart-2: oklch(0.72 0.12 75);
+  --chart-3: oklch(0.55 0.06 200);
+  --chart-4: oklch(0.65 0.05 140);
+  --chart-5: oklch(0.5 0.03 160);
 
-  /* Chart colors - earth tones */
-  --chart-1: oklch(0.55 0.12 35); /* Terracotta */
-  --chart-2: oklch(0.65 0.08 145); /* Sage */
-  --chart-3: oklch(0.45 0.1 160); /* Forest */
-  --chart-4: oklch(0.75 0.08 55); /* Clay */
-  --chart-5: oklch(0.7 0.02 80); /* Stone */
-
-  /* Sidebar - Warm cream */
-  --sidebar: oklch(0.96 0.01 85);
-  --sidebar-foreground: oklch(0.25 0.02 50);
-  --sidebar-primary: oklch(0.55 0.12 35);
-  --sidebar-primary-foreground: oklch(0.98 0.01 90);
-  --sidebar-accent: oklch(0.92 0.02 55);
-  --sidebar-accent-foreground: oklch(0.25 0.02 50);
-  --sidebar-border: oklch(0.88 0.015 80);
-  --sidebar-ring: oklch(0.55 0.12 35);
+  --sidebar: oklch(0.96 0.01 160);
+  --sidebar-foreground: oklch(0.22 0.025 160);
+  --sidebar-primary: oklch(0.38 0.08 155);
+  --sidebar-primary-foreground: oklch(0.98 0.01 160);
+  --sidebar-accent: oklch(0.93 0.02 155);
+  --sidebar-accent-foreground: oklch(0.28 0.04 155);
+  --sidebar-border: oklch(0.88 0.012 160);
+  --sidebar-ring: oklch(0.45 0.08 155);
 }
 
-/* Dark Mode - Warm Charcoal */
 .dark {
   color-scheme: dark;
 
-  /* Background: Warm charcoal */
-  --background: oklch(0.18 0.015 50);
-  /* Foreground: Warm cream */
-  --foreground: oklch(0.94 0.01 85);
+  --background: oklch(0.17 0.02 160);
+  --foreground: oklch(0.94 0.01 160);
 
-  /* Cards */
-  --card: oklch(0.22 0.015 50);
-  --card-foreground: oklch(0.94 0.01 85);
+  --card: oklch(0.21 0.02 160);
+  --card-foreground: oklch(0.94 0.01 160);
 
-  /* Popover */
-  --popover: oklch(0.22 0.015 50);
-  --popover-foreground: oklch(0.94 0.01 85);
+  --popover: oklch(0.21 0.02 160);
+  --popover-foreground: oklch(0.94 0.01 160);
 
-  /* Primary: Lighter terracotta for dark mode */
-  --primary: oklch(0.65 0.12 35);
-  --primary-foreground: oklch(0.18 0.015 50);
+  --primary: oklch(0.72 0.1 155);
+  --primary-foreground: oklch(0.17 0.02 160);
 
-  /* Secondary: Lighter sage */
-  --secondary: oklch(0.55 0.08 145);
-  --secondary-foreground: oklch(0.94 0.01 85);
+  --secondary: oklch(0.75 0.12 75);
+  --secondary-foreground: oklch(0.2 0.04 60);
 
-  /* Muted */
-  --muted: oklch(0.28 0.015 50);
-  --muted-foreground: oklch(0.65 0.01 80);
+  --muted: oklch(0.26 0.02 160);
+  --muted-foreground: oklch(0.7 0.02 160);
 
-  /* Accent */
-  --accent: oklch(0.3 0.02 55);
-  --accent-foreground: oklch(0.94 0.01 85);
+  --accent: oklch(0.28 0.03 155);
+  --accent-foreground: oklch(0.94 0.01 160);
 
-  /* Destructive */
   --destructive: oklch(0.65 0.18 25);
+  --success: oklch(0.62 0.1 155);
 
-  /* Success */
-  --success: oklch(0.55 0.1 160);
+  --border: oklch(0.3 0.02 160);
+  --input: oklch(0.3 0.02 160);
+  --ring: oklch(0.72 0.1 155);
 
-  /* Borders */
-  --border: oklch(0.32 0.015 50);
-  --input: oklch(0.32 0.015 50);
-  --ring: oklch(0.65 0.12 35);
+  --chart-1: oklch(0.72 0.1 155);
+  --chart-2: oklch(0.75 0.12 75);
+  --chart-3: oklch(0.6 0.06 200);
+  --chart-4: oklch(0.65 0.05 140);
+  --chart-5: oklch(0.55 0.03 160);
 
-  /* Chart colors - adjusted for dark */
-  --chart-1: oklch(0.65 0.12 35);
-  --chart-2: oklch(0.55 0.08 145);
-  --chart-3: oklch(0.55 0.1 160);
-  --chart-4: oklch(0.65 0.08 55);
-  --chart-5: oklch(0.6 0.02 80);
-
-  /* Sidebar */
-  --sidebar: oklch(0.2 0.015 50);
-  --sidebar-foreground: oklch(0.94 0.01 85);
-  --sidebar-primary: oklch(0.65 0.12 35);
-  --sidebar-primary-foreground: oklch(0.18 0.015 50);
-  --sidebar-accent: oklch(0.28 0.02 55);
-  --sidebar-accent-foreground: oklch(0.94 0.01 85);
-  --sidebar-border: oklch(0.32 0.015 50);
-  --sidebar-ring: oklch(0.65 0.12 35);
+  --sidebar: oklch(0.19 0.02 160);
+  --sidebar-foreground: oklch(0.94 0.01 160);
+  --sidebar-primary: oklch(0.72 0.1 155);
+  --sidebar-primary-foreground: oklch(0.17 0.02 160);
+  --sidebar-accent: oklch(0.28 0.03 155);
+  --sidebar-accent-foreground: oklch(0.94 0.01 160);
+  --sidebar-border: oklch(0.3 0.02 160);
+  --sidebar-ring: oklch(0.72 0.1 155);
 }
-
-/* ============================================
-   Base Styles
-   ============================================ */
 
 @layer base {
   * {
@@ -204,7 +172,6 @@
       "calt" 1;
   }
 
-  /* Balanced headings - prevent widows */
   h1,
   h2,
   h3,
@@ -212,14 +179,13 @@
   h5,
   h6 {
     text-wrap: balance;
+    font-family: var(--font-fraunces), Georgia, serif;
   }
 
-  /* Tabular numbers for data */
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
 
-  /* Container with proper max-width and padding */
   .container {
     width: 100%;
     margin-left: auto;
@@ -244,11 +210,6 @@
   }
 }
 
-/* ============================================
-   Accessibility
-   ============================================ */
-
-/* Skip link for keyboard navigation */
 .skip-link {
   @apply absolute left-4 z-[100] rounded-md px-4 py-2 font-medium;
   @apply bg-primary text-primary-foreground;
@@ -261,7 +222,6 @@
   top: 1rem;
 }
 
-/* Screen reader only */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -274,11 +234,6 @@
   border-width: 0;
 }
 
-/* ============================================
-   Motion & Animation Preferences
-   ============================================ */
-
-/* Respect user motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -290,11 +245,6 @@
   }
 }
 
-/* ============================================
-   Touch & Interaction
-   ============================================ */
-
-/* Prevent double-tap zoom delay on mobile */
 button,
 a,
 [role="button"],
@@ -304,61 +254,107 @@ input[type="button"] {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Contain overscroll in modals/sheets */
 .overscroll-contain {
   overscroll-behavior: contain;
 }
 
-/* ============================================
-   Typography Utilities
-   ============================================ */
-
-/* Heading font */
 .font-heading {
-  font-family:
-    var(--font-plus-jakarta), var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-fraunces), Georgia, serif;
 }
 
-/* Body font */
 .font-body {
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-manrope), system-ui, sans-serif;
 }
 
-/* ============================================
-   Component Utilities
-   ============================================ */
-
-/* Warm shadow for cards */
 .shadow-warm {
   box-shadow:
-    0 1px 3px 0 oklch(0.55 0.05 35 / 0.08),
-    0 1px 2px -1px oklch(0.55 0.05 35 / 0.08);
+    0 1px 2px oklch(0.3 0.04 160 / 0.06),
+    0 8px 24px oklch(0.3 0.04 160 / 0.06);
 }
 
 .shadow-warm-md {
   box-shadow:
-    0 4px 6px -1px oklch(0.55 0.05 35 / 0.08),
-    0 2px 4px -2px oklch(0.55 0.05 35 / 0.08);
+    0 4px 12px oklch(0.3 0.04 160 / 0.08),
+    0 12px 32px oklch(0.3 0.04 160 / 0.08);
 }
 
 .shadow-warm-lg {
   box-shadow:
-    0 10px 15px -3px oklch(0.55 0.05 35 / 0.08),
-    0 4px 6px -4px oklch(0.55 0.05 35 / 0.08);
+    0 8px 20px oklch(0.3 0.04 160 / 0.1),
+    0 20px 48px oklch(0.3 0.04 160 / 0.1);
 }
 
-/* Hover lift effect */
 .hover-lift {
   transition:
-    transform 0.2s ease-out,
-    box-shadow 0.2s ease-out;
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .hover-lift:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px);
 }
 
-/* Button press effect */
 .press-effect:active {
   transform: scale(0.98);
+}
+
+/* Motion utilities */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes soft-zoom {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out both;
+}
+
+.animate-soft-zoom {
+  animation: soft-zoom 8s ease-out both;
+}
+
+.animate-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animate-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animate-delay-300 {
+  animation-delay: 300ms;
+}
+
+.surface-grid {
+  background-image:
+    linear-gradient(oklch(0.45 0.04 155 / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.45 0.04 155 / 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
 }

@@ -1,28 +1,23 @@
-import { Protect } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/forms/ProfileForm";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { sanityFetch } from "@/lib/sanity/live";
-import { USER_PROFILE_QUERY } from "@/lib/sanity/queries";
+import { getSessionUser, hasActiveAgentPlan } from "@/lib/api/session";
 
 export default async function ProfilePage() {
-  const { userId } = await auth();
+  const user = await getSessionUser();
+  if (!user) redirect("/sign-in");
+  if (!user.onboardingComplete) redirect("/onboarding");
 
-  if (!userId) {
-    redirect("/sign-in");
-  }
-
-  const { data: user } = await sanityFetch({
-    query: USER_PROFILE_QUERY,
-    params: { clerkId: userId },
-  });
-
-  if (!user) {
-    redirect("/onboarding");
-  }
+  const profileUser = {
+    _id: user.id,
+    name: user.name || "",
+    email: user.email || "",
+    phone: user.phone || "",
+    phoneVerifiedAt: user.phoneVerifiedAt || null,
+    emailVerifiedAt: user.emailVerifiedAt || null,
+  };
 
   return (
     <div className="container max-w-2xl py-16">
@@ -34,11 +29,11 @@ export default async function ProfilePage() {
             <CardTitle>Profile Information</CardTitle>
           </CardHeader>
           <CardContent>
-            <ProfileForm user={user} />
+            <ProfileForm user={profileUser} />
           </CardContent>
         </Card>
 
-        <Protect plan="agent">
+        {hasActiveAgentPlan(user) ? (
           <Card>
             <CardHeader>
               <CardTitle>Agent Profile</CardTitle>
@@ -53,7 +48,7 @@ export default async function ProfilePage() {
               </Button>
             </CardContent>
           </Card>
-        </Protect>
+        ) : null}
       </div>
     </div>
   );

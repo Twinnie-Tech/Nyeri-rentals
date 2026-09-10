@@ -17,12 +17,39 @@ export const FEATURED_PROPERTIES_QUERY = defineQuery(/* groq */ `
     title,
     "slug": slug.current,
     price,
+    listingCategory,
+    propertyType,
+    landSize,
+    landPurpose,
     bedrooms,
     bathrooms,
     squareFeet,
     address,
     "image": images[0] { ${imageFragment} },
     location
+  }
+`);
+
+export const PROPERTIES_BY_CATEGORY_QUERY = defineQuery(/* groq */ `
+  *[_type == "property" && status == "active"
+    && ($category == "" || listingCategory == $category)
+    && ($type == "" || propertyType == $type)
+  ] | order(featured desc, createdAt desc) [0...$limit] {
+    _id,
+    title,
+    "slug": slug.current,
+    price,
+    listingCategory,
+    propertyType,
+    landSize,
+    landPurpose,
+    bedrooms,
+    bathrooms,
+    squareFeet,
+    address,
+    "image": images[0] { ${imageFragment} },
+    location,
+    featured
   }
 `);
 
@@ -33,6 +60,9 @@ export const PROPERTIES_SEARCH_QUERY = defineQuery(/* groq */ `
     && ($beds == 0 || ($bedsIsPlus == true && bedrooms >= $beds) || ($bedsIsPlus == false && bedrooms == $beds))
     && ($baths == 0 || ($bathsIsPlus == true && bathrooms >= $baths) || ($bathsIsPlus == false && bathrooms == $baths))
     && ($type == "" || propertyType == $type)
+    && ($category == "" || listingCategory == $category)
+    && ($landPurpose == "" || landPurpose == $landPurpose)
+    && ($landSize == "" || landSize == $landSize)
     && ($city == "" || lower(address.city) match $city + "*" || lower(address.state) match $city + "*" || lower(address.zipCode) match $city + "*")
     && ($minSqft == 0 || squareFeet >= $minSqft)
     && ($maxSqft == 0 || squareFeet <= $maxSqft)
@@ -50,6 +80,11 @@ export const PROPERTIES_SEARCH_QUERY = defineQuery(/* groq */ `
     "slug": slug.current,
     price,
     originalPrice,
+    listingCategory,
+    propertyType,
+    landSize,
+    landSizeAcres,
+    landPurpose,
     bedrooms,
     bathrooms,
     squareFeet,
@@ -71,6 +106,9 @@ export const PROPERTIES_COUNT_QUERY = defineQuery(/* groq */ `
     && ($beds == 0 || ($bedsIsPlus == true && bedrooms >= $beds) || ($bedsIsPlus == false && bedrooms == $beds))
     && ($baths == 0 || ($bathsIsPlus == true && bathrooms >= $baths) || ($bathsIsPlus == false && bathrooms == $baths))
     && ($type == "" || propertyType == $type)
+    && ($category == "" || listingCategory == $category)
+    && ($landPurpose == "" || landPurpose == $landPurpose)
+    && ($landSize == "" || landSize == $landSize)
     && ($city == "" || lower(address.city) match $city + "*" || lower(address.state) match $city + "*" || lower(address.zipCode) match $city + "*")
     && ($minSqft == 0 || squareFeet >= $minSqft)
     && ($maxSqft == 0 || squareFeet <= $maxSqft)
@@ -90,9 +128,36 @@ export const PROPERTY_DETAIL_QUERY = defineQuery(/* groq */ `
   *[_type == "property" && _id == $id][0] {
     _id,
     title,
+    "slug": slug.current,
     description,
     price,
+    listingCategory,
     propertyType,
+    landSize,
+    landSizeAcres,
+    landPurpose,
+    furnished,
+    depositAmount,
+    availableFrom,
+    petsAllowed,
+    titleDeedReady,
+    serviceCharge,
+    originalPrice,
+    openHouseDate,
+    maxGuests,
+    minNights,
+    cleaningFee,
+    checkInTime,
+    checkOutTime,
+    hasPool,
+    hasStaffQuarters,
+    hasGarden,
+    hasBackupPower,
+    roadAccess,
+    fenced,
+    waterSource,
+    cropsSuitable,
+    parkingSpaces,
     status,
     bedrooms,
     bathrooms,
@@ -123,6 +188,8 @@ export const AGENT_LISTINGS_QUERY = defineQuery(/* groq */ `
     "slug": slug.current,
     price,
     status,
+    listingCategory,
+    propertyType,
     bedrooms,
     bathrooms,
     "image": images[0] { ${imageFragment} },
@@ -145,23 +212,6 @@ export const AGENT_LEADS_QUERY = defineQuery(/* groq */ `
       "slug": slug.current
     }
   }
-`);
-
-// User profile
-export const USER_PROFILE_QUERY = defineQuery(/* groq */ `
-  *[_type == "user" && clerkId == $clerkId][0] {
-    _id,
-    name,
-    email,
-    phone,
-    photo { ${imageFragment} },
-    createdAt
-  }
-`);
-
-// Check if user exists (for onboarding detection)
-export const USER_EXISTS_QUERY = defineQuery(/* groq */ `
-  *[_type == "user" && clerkId == $clerkId][0]{ _id }
 `);
 
 // Agent profile
@@ -197,7 +247,33 @@ export const LISTING_BY_ID_QUERY = defineQuery(/* groq */ `
     title,
     description,
     price,
+    listingCategory,
     propertyType,
+    landSize,
+    landSizeAcres,
+    landPurpose,
+    furnished,
+    depositAmount,
+    availableFrom,
+    petsAllowed,
+    titleDeedReady,
+    serviceCharge,
+    maxGuests,
+    minNights,
+    cleaningFee,
+    checkInTime,
+    checkOutTime,
+    hasPool,
+    hasStaffQuarters,
+    hasGarden,
+    hasBackupPower,
+    roadAccess,
+    fenced,
+    waterSource,
+    cropsSuitable,
+    parkingSpaces,
+    originalPrice,
+    openHouseDate,
     status,
     bedrooms,
     bathrooms,
@@ -211,22 +287,21 @@ export const LISTING_BY_ID_QUERY = defineQuery(/* groq */ `
   }
 `);
 
-// User's saved listings
-export const USER_SAVED_LISTINGS_QUERY = defineQuery(/* groq */ `
-  *[_type == "user" && clerkId == $clerkId][0] {
-    savedListings[]-> {
-      _id,
-      title,
-      "slug": slug.current,
-      price,
-      bedrooms,
-      bathrooms,
-      squareFeet,
-      address,
-      "image": images[0] { ${imageFragment} },
-      status
-    }
-  }.savedListings
+export const PROPERTIES_BY_IDS_QUERY = defineQuery(/* groq */ `
+  *[_type == "property" && _id in $ids] {
+    _id,
+    title,
+    "slug": slug.current,
+    price,
+    listingCategory,
+    propertyType,
+    bedrooms,
+    bathrooms,
+    squareFeet,
+    address,
+    "image": images[0] { ${imageFragment} },
+    status
+  }
 `);
 
 // ============================================
@@ -313,16 +388,6 @@ export const AGENT_ONBOARDING_CHECK_QUERY = defineQuery(/* groq */ `
   *[_type == "agent" && userId == $userId][0]{ _id, onboardingComplete }
 `);
 
-// User contact info for leads
-export const USER_CONTACT_QUERY = defineQuery(/* groq */ `
-  *[_type == "user" && clerkId == $clerkId][0]{ name, email, phone }
-`);
-
-// User with saved IDs
-export const USER_SAVED_IDS_QUERY = defineQuery(/* groq */ `
-  *[_type == "user" && clerkId == $clerkId][0]{ _id, "savedIds": savedListings[]._ref }
-`);
-
 // Check if lead exists for property/email
 export const LEAD_EXISTS_QUERY = defineQuery(/* groq */ `
   *[_type == "lead" && property._ref == $propertyId && buyerEmail == $email][0]{ _id }
@@ -335,7 +400,16 @@ export const LEAD_AGENT_REF_QUERY = defineQuery(/* groq */ `
 
 // Property ownership check
 export const PROPERTY_AGENT_REF_QUERY = defineQuery(/* groq */ `
-  *[_type == "property" && _id == $id][0]{ agent }
+  *[_type == "property" && _id == $id][0]{
+    agent,
+    title,
+    listingCategory,
+    propertyType,
+    price,
+    bedrooms,
+    bathrooms,
+    address
+  }
 `);
 
 // ============================================

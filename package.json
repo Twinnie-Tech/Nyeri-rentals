@@ -3,18 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node scripts/with-system-ca.cjs next dev",
+    "dev:api": "node scripts/with-system-ca.cjs pnpm --filter @greenkey/api dev",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
     "build": "next build",
-    "start": "next start",
+    "build:api": "pnpm --filter @greenkey/api build",
+    "start": "node scripts/with-system-ca.cjs next start",
     "lint": "biome check",
     "format": "biome format --write",
     "typegen": "sanity schema extract --path=./schema.json && sanity typegen generate",
     "update-types": "pnpm run typegen",
-    "seed": "npx tsx scripts/seed/seed.ts",
-    "seed:clean": "npx tsx scripts/seed/seed.ts --clean"
+    "seed": "node scripts/with-system-ca.cjs npx tsx scripts/seed/seed.ts",
+    "seed:clean": "node scripts/with-system-ca.cjs npx tsx scripts/seed/seed.ts --clean",
+    "smoke:staging": "node scripts/smoke-staging.mjs"
   },
-   "dependencies": {
-    "@clerk/nextjs": "^6.36.10",
+  "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.2.2",
     "@mapbox/mapbox-sdk": "^0.16.2",
@@ -46,7 +50,6 @@
     "recharts": "^3.7.0",
     "sanity": "^5.7.0",
     "sonner": "^2.0.7",
-    "svix": "^1.84.1",
     "tailwind-merge": "^3.4.0",
     "zod": "^4.3.6"
   },

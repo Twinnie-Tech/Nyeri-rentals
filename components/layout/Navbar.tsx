@@ -1,16 +1,16 @@
 "use client";
 
 import {
-  Protect,
-  SignedIn,
-  SignedOut,
-  SignInButton,
-  SignUpButton,
-  UserButton,
-} from "@clerk/nextjs";
-import { Heart, Home, LayoutDashboard, Menu, User, X } from "lucide-react";
+  Heart,
+  Home,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  User,
+  X,
+} from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,16 +21,63 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
+type NavUser = {
+  id: string;
+  name: string | null;
+  roles: string[];
+  subscription?: { status: string; currentPeriodEnd: string | null } | null;
+};
+
+function hasAgentAccess(user: NavUser | null) {
+  if (!user) return false;
+  if (user.roles?.includes("ADMIN")) return true;
+  const sub = user.subscription;
+  if (!sub || sub.status !== "ACTIVE") return false;
+  if (!sub.currentPeriodEnd) return true;
+  return new Date(sub.currentPeriodEnd) > new Date();
+}
+
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [user, setUser] = useState<NavUser | null>(null);
   const pathname = usePathname();
+  const router = useRouter();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  // Disable sticky header on pricing page to prevent z-index conflicts with Clerk's PricingTable
+  useEffect(() => {
+    let cancelled = false;
+    // Include pathname so we refetch after client navigations (e.g. OTP → home).
+    const meUrl = `/api/auth/me?nav=${encodeURIComponent(pathname)}`;
+    fetch(meUrl, { credentials: "same-origin", cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        const data = await res.json();
+        return (data.user as NavUser) || null;
+      })
+      .then((u) => {
+        if (!cancelled) setUser(u);
+      })
+      .catch(() => {
+        if (!cancelled) setUser(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pathname]);
+
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    router.push("/");
+    router.refresh();
+  }
+
+  const signedIn = Boolean(user);
+  const agentAccess = hasAgentAccess(user);
   const isPricingPage = pathname === "/pricing";
 
   return (
@@ -42,20 +89,19 @@ export function Navbar() {
       }
     >
       <div className="container flex h-16 items-center justify-between">
-        {/* Logo and Navigation */}
         <div className="flex items-center gap-8">
           <Link
             href="/"
             className="flex items-center gap-2.5 transition-opacity duration-200 hover:opacity-80"
           >
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary">
               <Home
-                className="h-5 w-5 text-primary-foreground"
+                className="h-4 w-4 text-primary-foreground"
                 aria-hidden="true"
               />
             </div>
-            <span className="text-xl font-bold font-heading tracking-tight">
-              Nyeri Rentals
+            <span className="text-lg font-semibold font-heading tracking-tight">
+              GreenKey Realty
             </span>
           </Link>
 
@@ -69,96 +115,68 @@ export function Navbar() {
             >
               Browse Properties
             </Link>
-            <SignedIn>
-              <Protect
-                plan="agent"
-                fallback={
-                  <Link
-                    href="/pricing"
-                    className="px-4 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:text-foreground hover:bg-accent transition-[color,background-color] duration-200"
-                  >
-                    Become an Agent
-                  </Link>
-                }
+            {signedIn && agentAccess ? (
+              <Link
+                href="/dashboard"
+                className="px-4 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:text-foreground hover:bg-accent transition-[color,background-color] duration-200"
               >
-                <Link
-                  href="/dashboard"
-                  className="px-4 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:text-foreground hover:bg-accent transition-[color,background-color] duration-200"
-                >
-                  Dashboard
-                </Link>
-              </Protect>
-            </SignedIn>
-            <SignedOut>
+                Dashboard
+              </Link>
+            ) : (
               <Link
                 href="/pricing"
                 className="px-4 py-2 text-sm font-medium text-muted-foreground rounded-lg hover:text-foreground hover:bg-accent transition-[color,background-color] duration-200"
               >
                 Become an Agent
               </Link>
-            </SignedOut>
+            )}
           </nav>
         </div>
 
-        {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-2">
-          <SignedIn>
-            <Link
-              href="/saved"
-              aria-label="Saved properties"
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-[color,background-color] duration-200"
-            >
-              <Heart className="h-5 w-5" aria-hidden="true" />
-            </Link>
-            <Link
-              href="/profile"
-              aria-label="My profile"
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-[color,background-color] duration-200"
-            >
-              <User className="h-5 w-5" aria-hidden="true" />
-            </Link>
-            <Protect plan="agent">
+          {signedIn ? (
+            <>
               <Link
-                href="/dashboard"
-                aria-label="Agent dashboard"
+                href="/saved"
+                aria-label="Saved properties"
                 className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-[color,background-color] duration-200"
               >
-                <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
+                <Heart className="h-5 w-5" aria-hidden="true" />
               </Link>
-            </Protect>
-            <div className="ml-2">
-              <UserButton
-                appearance={{
-                  elements: {
-                    avatarBox: "h-9 w-9",
-                  },
-                }}
-              />
-            </div>
-          </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <Button variant="ghost" size="sm">
-                Sign In
+              <Link
+                href="/profile"
+                aria-label="My profile"
+                className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-[color,background-color] duration-200"
+              >
+                <User className="h-5 w-5" aria-hidden="true" />
+              </Link>
+              {agentAccess ? (
+                <Link
+                  href="/dashboard"
+                  aria-label="Agent dashboard"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-[color,background-color] duration-200"
+                >
+                  <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
+                </Link>
+              ) : null}
+              <Button variant="ghost" size="sm" onClick={logout}>
+                <LogOut className="h-4 w-4 mr-1" aria-hidden="true" />
+                Sign out
               </Button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <Button size="sm">Get Started</Button>
-            </SignUpButton>
-          </SignedOut>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/sign-in">Sign In</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link href="/sign-in">Get Started</Link>
+              </Button>
+            </>
+          )}
         </div>
 
-        {/* Mobile Menu */}
         <div className="flex md:hidden items-center gap-2">
-          <SignedIn>
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "h-8 w-8",
-                },
-              }}
-            />
-          </SignedIn>
           {isMounted ? (
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
@@ -187,7 +205,7 @@ export function Navbar() {
                         aria-hidden="true"
                       />
                     </div>
-                    <span className="font-heading">Nyeri Rentals</span>
+                    <span className="font-heading">GreenKey Realty</span>
                   </SheetTitle>
                 </SheetHeader>
                 <nav
@@ -201,30 +219,16 @@ export function Navbar() {
                   >
                     Browse Rentals
                   </Link>
-                  <SignedIn>
-                    <Protect
-                      plan="agent"
-                      fallback={
-                        <Link
-                          href="/pricing"
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg hover:bg-accent transition-[background-color] duration-200"
-                        >
-                          Become an Agent
-                        </Link>
-                      }
+                  {signedIn && agentAccess ? (
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg hover:bg-accent transition-[background-color] duration-200"
                     >
-                      <Link
-                        href="/dashboard"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg hover:bg-accent transition-[background-color] duration-200"
-                      >
-                        <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
-                        Agent Dashboard
-                      </Link>
-                    </Protect>
-                  </SignedIn>
-                  <SignedOut>
+                      <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
+                      Agent Dashboard
+                    </Link>
+                  ) : (
                     <Link
                       href="/pricing"
                       onClick={() => setIsOpen(false)}
@@ -232,48 +236,60 @@ export function Navbar() {
                     >
                       Become an Agent
                     </Link>
-                  </SignedOut>
-                  <SignedIn>
-                    <div className="h-px bg-border my-2" />
-                    <Link
-                      href="/saved"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg hover:bg-accent transition-[background-color] duration-200"
-                    >
-                      <Heart className="h-5 w-5" aria-hidden="true" />
-                      Saved Properties
-                    </Link>
-                    <Link
-                      href="/profile"
-                      onClick={() => setIsOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg hover:bg-accent transition-[background-color] duration-200"
-                    >
-                      <User className="h-5 w-5" aria-hidden="true" />
-                      My Profile
-                    </Link>
-                  </SignedIn>
-                  <SignedOut>
-                    <div className="h-px bg-border my-2" />
-                    <div className="flex flex-col gap-2 px-4 mt-2">
-                      <SignInButton mode="modal">
-                        <Button
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          Sign In
+                  )}
+                  {signedIn ? (
+                    <>
+                      <div className="h-px bg-border my-2" />
+                      <Link
+                        href="/saved"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg hover:bg-accent transition-[background-color] duration-200"
+                      >
+                        <Heart className="h-5 w-5" aria-hidden="true" />
+                        Saved Properties
+                      </Link>
+                      <Link
+                        href="/profile"
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg hover:bg-accent transition-[background-color] duration-200"
+                      >
+                        <User className="h-5 w-5" aria-hidden="true" />
+                        My Profile
+                      </Link>
+                      <Button
+                        variant="outline"
+                        className="mx-4 mt-2"
+                        onClick={() => {
+                          setIsOpen(false);
+                          logout();
+                        }}
+                      >
+                        Sign out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="h-px bg-border my-2" />
+                      <div className="flex flex-col gap-2 px-4 mt-2">
+                        <Button variant="outline" className="w-full" asChild>
+                          <Link
+                            href="/sign-in"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            Sign In
+                          </Link>
                         </Button>
-                      </SignInButton>
-                      <SignUpButton mode="modal">
-                        <Button
-                          className="w-full"
-                          onClick={() => setIsOpen(false)}
-                        >
-                          Get Started
+                        <Button className="w-full" asChild>
+                          <Link
+                            href="/sign-in"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            Get Started
+                          </Link>
                         </Button>
-                      </SignUpButton>
-                    </div>
-                  </SignedOut>
+                      </div>
+                    </>
+                  )}
                 </nav>
               </SheetContent>
             </Sheet>

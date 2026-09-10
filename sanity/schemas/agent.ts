@@ -7,8 +7,9 @@ export const agent = defineType({
   fields: [
     defineField({
       name: "userId",
-      title: "Clerk User ID",
+      title: "User ID",
       type: "string",
+      description: "Nest user id linked to this agent profile",
       validation: (Rule) => Rule.required(),
       readOnly: true,
     }),

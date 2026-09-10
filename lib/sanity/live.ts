@@ -3,6 +3,6 @@ import { client } from "./client";
 
 export const { sanityFetch, SanityLive } = defineLive({
   client: client.withConfig({ apiVersion: "v2025-01-01" }),
-  serverToken: process.env.SANITY_API_READ_TOKEN,
-  browserToken: process.env.SANITY_API_READ_TOKEN,
+  serverToken: process.env.SANITY_API_READ_TOKEN || false,
+  browserToken: process.env.SANITY_API_READ_TOKEN || false,
 });

@@ -1,0 +1,17 @@
+# Railway — Nest API (@greenkey/api)
+# Dashboard: New Project → Deploy from GitHub → set this file / Dockerfile.
+# Create separate Railway environments (or projects) for staging and production.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile.api"
+
+[deploy]
+healthcheckPath = "/v1/health"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+# Inject from Railway Postgres plugin + Upstash (or Railway Redis):
+#   DATABASE_URL, REDIS_URL
+# Plus secrets from apps/api/.env.staging.example / .env.production.example
