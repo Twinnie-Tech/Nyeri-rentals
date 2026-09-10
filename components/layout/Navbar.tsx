@@ -50,7 +50,9 @@ export function Navbar() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/auth/me", { credentials: "same-origin", cache: "no-store" })
+    // Include pathname so we refetch after client navigations (e.g. OTP → home).
+    const meUrl = `/api/auth/me?nav=${encodeURIComponent(pathname)}`;
+    fetch(meUrl, { credentials: "same-origin", cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) return null;
         const data = await res.json();
@@ -65,7 +67,6 @@ export function Navbar() {
     return () => {
       cancelled = true;
     };
-    // Re-check session after client navigations (e.g. OTP sign-in → home)
   }, [pathname]);
 
   async function logout() {

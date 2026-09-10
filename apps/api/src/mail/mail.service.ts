@@ -5,11 +5,7 @@ import {
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import nodemailer, { type Transporter } from "nodemailer";
-import {
-  MailProviderName,
-  SendMailInput,
-  SendMailResult,
-} from "./mail.types";
+import { MailProviderName, SendMailInput, SendMailResult } from "./mail.types";
 import { buildOtpEmail } from "./otp-email.template";
 import { buildWelcomeEmail } from "./welcome-email.template";
 
