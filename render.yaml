@@ -1,0 +1,74 @@
+# GreenKey — Render Blueprint (API + Postgres)
+# Dashboard: New → Blueprint → connect this repo → select render.yaml
+# Docs: docs/RENDER_DEPLOY.md
+#
+# Staging targets branch `develop`. Create a second Blueprint / service
+# for production on `main` if needed (separate DB).
+
+databases:
+  - name: greenkey-staging-db
+    plan: free
+    databaseName: greenkey
+    user: greenkey
+
+services:
+  - type: web
+    name: greenkey-api-staging
+    runtime: docker
+    plan: free
+    branch: develop
+    dockerfilePath: ./Dockerfile.api
+    dockerContext: .
+    healthCheckPath: /v1/health
+    # Render injects PORT; Nest reads process.env.PORT
+    envVars:
+      - key: NODE_ENV
+        value: staging
+      - key: DATABASE_URL
+        fromDatabase:
+          name: greenkey-staging-db
+          property: connectionString
+      - key: REDIS_URL
+        sync: false # paste Upstash rediss://… in dashboard
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_TTL
+        value: 15m
+      - key: JWT_REFRESH_TTL
+        value: 30d
+      - key: OTP_TTL_SECONDS
+        value: "300"
+      - key: OTP_LENGTH
+        value: "6"
+      - key: ALLOW_PAYMENT_SIMULATE
+        value: "true"
+      - key: SMS_PROVIDER
+        value: console
+      - key: EMAIL_PROVIDER
+        value: console
+      - key: WHATSAPP_ENABLED
+        value: "false"
+      - key: SANITY_DATASET
+        value: staging
+      - key: SANITY_API_VERSION
+        value: "2024-01-01"
+      - key: SANITY_PROJECT_ID
+        sync: false # set in dashboard
+      - key: SANITY_WRITE_TOKEN
+        sync: false # set in dashboard
+      - key: APP_URL
+        sync: false # Vercel staging URL
+      - key: API_URL
+        sync: false # https://greenkey-api-staging.onrender.com (no /v1)
+      - key: CORS_ORIGINS
+        sync: false # exact Vercel origin
+      - key: AGENT_PLAN_AMOUNT_KES
+        value: "2500"
+      - key: AGENT_PLAN_DAYS
+        value: "30"
+      - key: MPESA_ENV
+        value: sandbox
+      - key: MPESA_CALLBACK_URL
+        sync: false # https://greenkey-api-staging.onrender.com/v1/billing/mpesa/callback
