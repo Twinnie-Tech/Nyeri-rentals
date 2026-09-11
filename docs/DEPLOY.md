@@ -1,22 +1,24 @@
 # GreenKey — Step-by-step deployment (dev · staging · prod)
 
-**Stack:** Vercel (Next) · Railway (Nest + Postgres) · Upstash (Redis) · Sanity (CMS)
+**Stack:** Vercel (Next) · **Render** (Nest + Postgres) · Upstash (Redis) · Sanity (CMS)
 
 | Env | Who | Web | API | Data |
 |-----|-----|-----|-----|------|
 | **dev** | Engineers | localhost:3000 | localhost:4000 | Docker Postgres/Redis |
-| **staging** | Clients / QA / talk | `staging.…` or Vercel URL | `api-staging.…` or Railway URL | Railway DB + Upstash + Sanity `staging` |
-| **prod** | Public | `yourdomain.com` | `api.…` | Railway DB + Upstash + Sanity `production` |
+| **staging** | Clients / QA / talk | `staging.…` or Vercel URL | **Render** `*.onrender.com` | Render DB + Upstash + Sanity `staging` |
+| **prod** | Public | `yourdomain.com` | `api.…` (Render or paid host) | Separate DB + Upstash + Sanity `production` |
 
-> **Staging first (talk + clients):** follow [`STAGING_GO_LIVE.md`](./STAGING_GO_LIVE.md) — create `develop`, wire Upstash + Railway + Vercel + Sanity `staging`, then run `node scripts/smoke-staging.mjs <API>/v1`.
+> **Staging first (talk + clients):** [`RENDER_DEPLOY.md`](./RENDER_DEPLOY.md) (API + Postgres on Render) · [`STAGING_GO_LIVE.md`](./STAGING_GO_LIVE.md). Railway free-tier may block peak-hour deploys in `us-west2`.
 
 **Config map**
 
 | File | Role |
 |------|------|
 | [`deploy/environments.yaml`](../deploy/environments.yaml) | Env matrix (URLs, secrets, branches) |
+| [`RENDER_DEPLOY.md`](./RENDER_DEPLOY.md) | Render API + Postgres (staging) |
 | [`STAGING_GO_LIVE.md`](./STAGING_GO_LIVE.md) | Staging checklist (talk + client QA) |
-| [`Dockerfile.api`](../Dockerfile.api) | Nest image for Railway |
+| [`render.yaml`](../render.yaml) | Render Blueprint |
+| [`Dockerfile.api`](../Dockerfile.api) | Nest image for Render / Docker |
 | [`railway.toml`](../railway.toml) | Railway build + healthcheck |
 | [`vercel.json`](../vercel.json) | Next on Vercel |
 | [`docker-compose.yml`](../docker-compose.yml) | Local Postgres + Redis |
@@ -135,56 +137,20 @@ pnpm dev        # terminal 2 → http://localhost:3000
 
 ---
 
-## Phase E — Railway **staging** API
+## Phase E — Render **staging** API + Postgres
 
-### E1. Project
-1. Railway → **New Project** → **Deploy from GitHub** → this repo  
-2. Confirm root is repo root (`Dockerfile.api` + `railway.toml`)  
+Prefer Render over Railway for staging (see peak-hour free-tier limits on Railway).
 
-### E2. Postgres
-1. **Add Plugin → PostgreSQL**  
-2. Confirm `DATABASE_URL` appears on the Nest service  
+Full steps: [`RENDER_DEPLOY.md`](./RENDER_DEPLOY.md).
 
-### E3. Variables
-Open Nest service → **Variables**. Copy from `apps/api/.env.staging.example` and set:
+1. Blueprint → connect repo → apply [`render.yaml`](../render.yaml)  
+2. Set `REDIS_URL`, Sanity, `APP_URL`, `API_URL`, `CORS_ORIGINS`  
+3. Deploy branch **`develop`**  
+4. Verify `GET https://greenkey-api-staging.onrender.com/v1/health`
 
-| Variable | Staging value |
-|----------|----------------|
-| `NODE_ENV` | `staging` |
-| `PORT` | `4000` |
-| `DATABASE_URL` | (from plugin) |
-| `REDIS_URL` | Upstash staging |
-| `JWT_ACCESS_SECRET` | unique random ≥32 chars |
-| `JWT_REFRESH_SECRET` | unique random ≥32 chars |
-| `APP_URL` | `https://staging.yourdomain.com` |
-| `API_URL` | `https://api-staging.yourdomain.com` (or Railway `*.up.railway.app`) |
-| `CORS_ORIGINS` | `https://staging.yourdomain.com` |
-| `SANITY_PROJECT_ID` | your project |
-| `SANITY_DATASET` | **`staging`** |
-| `SANITY_WRITE_TOKEN` | write token |
-| Messaging / Mailtrap / M-Pesa sandbox | as in staging example |
-| `ALLOW_PAYMENT_SIMULATE` | `true` for talk / first smoke |
-| `SMS_PROVIDER` / `EMAIL_PROVIDER` | `console` for talk (OTP in Railway logs) |
+### E-alt — Railway (optional / paid)
 
-### E4. Networking
-1. **Settings → Networking → Generate domain**  
-2. Optional custom domain: `api-staging.yourdomain.com`  
-3. Update `API_URL` + `MPESA_CALLBACK_URL` to that public URL  
-
-### E5. Git trigger
-- Watch branch: **`develop`**  
-- Environment name: **staging**  
-
-### E6. Deploy
-Push to `develop` or **Deploy** in Railway UI.  
-Container runs: `prisma migrate deploy` → `node dist/main.js`.
-
-### E7. Verify API
-```text
-GET https://api-staging…/v1/health
-→ {"ok":true,"db":true,"redis":true,...}
-```
-Swagger: `https://api-staging…/docs`
+If you use Railway later: same vars from `apps/api/.env.staging.example`, Dockerfile.api + `railway.toml`, link Postgres `DATABASE_URL` in the same environment.
 
 ---
 

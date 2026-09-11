@@ -1,8 +1,7 @@
 # Staging deploy — push/merge to develop
-# Requires GitHub Environment "staging" secrets (see docs/DEPLOY.md).
-#
-# Vercel: usually auto-deploys develop → staging via Vercel Git integration.
-# This workflow redeploys Railway Nest when RAILWAY_TOKEN is set.
+# Primary API host: Render (see docs/RENDER_DEPLOY.md + render.yaml).
+# Vercel auto-deploys develop for the web app.
+# Railway CLI below is optional / legacy if RAILWAY_TOKEN is set.
 
 name: Deploy staging
 

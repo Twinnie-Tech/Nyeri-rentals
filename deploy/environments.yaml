@@ -26,14 +26,14 @@ environments:
     label: Client / QA staging
     git_branch: develop
     urls:
-      # Replace after first deploy (Vercel + Railway public hosts or custom DNS)
+      # Replace after first deploy (Vercel + Render public hosts or custom DNS)
       web: https://staging.yourdomain.com
-      api: https://api-staging.yourdomain.com/v1
-      swagger: https://api-staging.yourdomain.com/docs
+      api: https://greenkey-api-staging.onrender.com/v1
+      swagger: https://greenkey-api-staging.onrender.com/docs
     infrastructure:
       web: Vercel (Staging / develop branch)
-      api: Railway (staging environment)
-      postgres: Railway Postgres (staging)
+      api: Render Web Service (Docker / Dockerfile.api)
+      postgres: Render Postgres (greenkey-staging-db)
       redis: Upstash (greenkey-staging)
       sanity_dataset: staging
     env_templates:
@@ -41,9 +41,6 @@ environments:
       web: .env.example (Staging section)
     github_environment: staging
     github_secrets:
-      - RAILWAY_TOKEN
-      - RAILWAY_SERVICE_ID
-      - RAILWAY_ENVIRONMENT_ID
       - VERCEL_TOKEN # optional if using CLI deploy
       - VERCEL_ORG_ID
       - VERCEL_PROJECT_ID
@@ -54,8 +51,9 @@ environments:
       sms: console | africastalking sandbox
       whatsapp: off | infobip trial
       mpesa: simulate | sandbox
+    blueprint: render.yaml
     workflow: .github/workflows/deploy-staging.yml
-    runbook: docs/STAGING_GO_LIVE.md
+    runbook: docs/RENDER_DEPLOY.md
     smoke: node scripts/smoke-staging.mjs $API_URL
 
   production:
