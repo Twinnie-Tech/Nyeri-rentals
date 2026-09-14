@@ -59,7 +59,10 @@ GET https://greenkey-api-staging.onrender.com/v1/health
 → {"ok":true,"db":true,"redis":true,...}
 ```
 
-### 1d. Vercel (web)
+### 1d. Vercel / local Next (web) → Render API
+
+Full guide: [`WIRE_FRONTEND_TO_RENDER.md`](./WIRE_FRONTEND_TO_RENDER.md)
+
 | Variable | Value |
 |----------|--------|
 | `NEXT_PUBLIC_API_URL` | `https://greenkey-api-staging.onrender.com/v1` |
@@ -68,7 +71,8 @@ GET https://greenkey-api-staging.onrender.com/v1/health
 | `NEXT_PUBLIC_SANITY_DATASET` | `staging` |
 | `NEXT_PUBLIC_MAPBOX_TOKEN` | Mapbox token |
 
-Deploy branch **`develop`**, then set Render `APP_URL` + `CORS_ORIGINS` to the Vercel origin.
+Set these on **Vercel** (and redeploy) **and/or** in `.env.local` for local UI against Render.  
+Then set Render `APP_URL` + `CORS_ORIGINS` to the Vercel origin (and `http://localhost:3000` if testing locally).
 
 ---
 

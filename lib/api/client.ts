@@ -35,16 +35,25 @@ export async function apiFetch<T>(
     headers.Authorization = `Bearer ${options.accessToken}`;
   }
 
-  const res = await fetch(
-    `${API_URL}${path.startsWith("/") ? path : `/${path}`}`,
-    {
+  const url = `${API_URL}${path.startsWith("/") ? path : `/${path}`}`;
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
       method: options.method || "GET",
       headers,
       body:
         options.body !== undefined ? JSON.stringify(options.body) : undefined,
       cache: options.cache || "no-store",
-    },
-  );
+    });
+  } catch (err) {
+    const detail = err instanceof Error ? err.message : String(err);
+    throw new ApiError(
+      `Cannot reach API at ${API_URL} (${detail}). Check NEXT_PUBLIC_API_URL / API_URL and that Render is awake.`,
+      503,
+      { url, cause: detail },
+    );
+  }
 
   const text = await res.text();
   let data: unknown = null;

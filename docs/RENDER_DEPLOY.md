@@ -62,7 +62,9 @@ Swagger: `https://greenkey-api-staging.onrender.com/docs`
 
 ---
 
-## Vercel wiring
+## Vercel / frontend wiring
+
+See [`WIRE_FRONTEND_TO_RENDER.md`](./WIRE_FRONTEND_TO_RENDER.md).
 
 On the Vercel project (Preview / `develop`):
 
@@ -71,7 +73,7 @@ On the Vercel project (Preview / `develop`):
 | `NEXT_PUBLIC_API_URL` | `https://greenkey-api-staging.onrender.com/v1` |
 | `API_URL` | same |
 
-Redeploy the web app after changing these.
+Redeploy the web app after changing these. Without this, the UI keeps calling `localhost:4000` and Render shows **no logs**.
 
 ---
 

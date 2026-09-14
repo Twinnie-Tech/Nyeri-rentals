@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { apiFetch } from "@/lib/api/client";
+import { ApiError, apiFetch } from "@/lib/api/client";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -13,6 +13,7 @@ export async function POST(req: Request) {
     return NextResponse.json(data);
   } catch (err) {
     const message = err instanceof Error ? err.message : "OTP request failed";
-    return NextResponse.json({ message }, { status: 400 });
+    const status = err instanceof ApiError ? err.status : 400;
+    return NextResponse.json({ message }, { status });
   }
 }
