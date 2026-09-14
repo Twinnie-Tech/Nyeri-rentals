@@ -2,7 +2,7 @@
 # Dashboard: New → Blueprint → connect this repo → select render.yaml
 # Docs: docs/RENDER_DEPLOY.md
 #
-# Staging targets branch `develop`. Create a second Blueprint / service
+# Staging targets branch `dev`. Create a second Blueprint / service
 # for production on `main` if needed (separate DB).
 
 databases:
@@ -16,7 +16,7 @@ services:
     name: greenkey-api-staging
     runtime: docker
     plan: free
-    branch: develop
+    branch: dev
     dockerfilePath: ./Dockerfile.api
     dockerContext: .
     healthCheckPath: /v1/health
