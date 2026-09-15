@@ -1,7 +1,7 @@
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.API_URL ||
-  "http://localhost:4000/v1";
+  "https://greenkey-api-staging.onrender.com/v1";
 
 export class ApiError extends Error {
   status: number;

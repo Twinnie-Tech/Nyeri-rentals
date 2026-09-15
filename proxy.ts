@@ -5,7 +5,7 @@ import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/api/constants";
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.API_URL ||
-  "http://localhost:4000/v1";
+  "https://greenkey-api-staging.onrender.com/v1";
 
 type MeResponse = {
   id: string;
